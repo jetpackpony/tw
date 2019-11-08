@@ -24,7 +24,7 @@ client.on('data', function (data) {
   console.log('str: ', d.toString());
 
   exchange.processMessage(d);
-  if (exchange.isComplete()) {
+  if (!exchange.isComplete) {
     const nextMessage = exchange.makeNextMessage();
     //client.write(nextMessage);
   } else {

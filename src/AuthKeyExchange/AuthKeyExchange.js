@@ -107,10 +107,6 @@ class AuthKeyExchange {
     this.incomingMsgs.push(parsed);
   }
 
-  isComplete() {
-    return this.isComplete;
-  }
-
   makeNextMessage() {
     if (this.outgoingMsgs.length === 0) {
       const msg = this.makeInitialMessage();
