@@ -28,9 +28,9 @@ class MessageBuilder {
   }
 
   addValueToMsg(value, length = 1, littleEndian = false) {
-    let bytes;
-    if (Array.isArray(value)) {
-      bytes = value.map((v) => valueToBytes(v, length, littleEndian));
+    let bytes = [];
+    if (Array.isArray(value) || value.constructor === Uint8Array) {
+      value.forEach((v) => bytes.push(valueToBytes(v, length, littleEndian)));
       bytes = bytes.flat();
     } else {
       bytes = valueToBytes(value, length, littleEndian);

@@ -52,6 +52,12 @@ describe('MessageBuilder', function() {
       builder.addValueToMsg([75999, 81444, 0xefefef], 4, true);
       expect(builder.getBytes()).to.eql(correct);
     });
+    it('should correctly add a Uint8Array', function() {
+      const correct = Uint8Array.from([0, 1, 40, 223, 0, 1]);
+      const builder = new MessageBuilder();
+      builder.addValueToMsg(Uint8Array.from([0, 1, 40, 223, 0, 1]));
+      expect(builder.getBytes()).to.eql(correct);
+    });
   });
 
   describe('addStrToMsg', function() {
