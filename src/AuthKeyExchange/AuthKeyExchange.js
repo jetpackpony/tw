@@ -5,6 +5,7 @@ const {
   bytesFromHex
 } = require('../primeFactorization');
 const pow2to32 = BI.str2bigInt("4294967296", 10, 1);
+const { MessageBuilder } = require('../MessageBuilder');
 
 const parseUnencryptedMessage = (msg) => {
   const res = {
@@ -62,25 +63,16 @@ class AuthKeyExchange {
   }
 
   makeInitialMessage() {
-    let buf = new ArrayBuffer(42);
-    let view = new DataView(buf);
-    let skip = 0;
+    const builder = new MessageBuilder();
 
     // envelope header
-    view.setUint8(skip++, 0xef);
+    builder.addValueToMsg(0xef);
 
     // env length
-    view.setUint8(skip++, 40 / 4);
+    builder.addValueToMsg(40 / 4);
 
     // auth_key_id
-    view.setUint8(skip++, 0);
-    view.setUint8(skip++, 0);
-    view.setUint8(skip++, 0);
-    view.setUint8(skip++, 0);
-    view.setUint8(skip++, 0);
-    view.setUint8(skip++, 0);
-    view.setUint8(skip++, 0);
-    view.setUint8(skip++, 0);
+    builder.addValueToMsg(Array(8).fill(0));
 
     // message_id
     if (!this.msg_id_hex) {
@@ -88,37 +80,22 @@ class AuthKeyExchange {
       const msg_id = BI.mult(unixTime, pow2to32);
       this.msg_id_hex = BI.bigInt2str(msg_id, 16);
     }
-    const msg_id_bytes = bytesFromHex(this.msg_id_hex);
     console.log("msg_id_hex", this.msg_id_hex);
-    console.log("msg_id_bytes", msg_id_bytes);
-
-    let i = skip + msg_id_bytes.length;
-    msg_id_bytes.forEach(b => {
-      view.setUint8(i, b);
-      i--;
-      skip++;
-    });
+    builder.addStrToMsg(this.msg_id_hex, true);
 
     // message_length
-    view.setUint32(skip, 20, true);
-    skip += 4;
+    builder.addValueToMsg(20, 4, true);
 
     // %(req_pq)
-    //view.setUint32(skip, 0x60469778, true);
-    view.setUint32(skip, 0xbe7e8ef1, true);
-    skip += 4;
+    //builder.addValueToMsg(0x60469778, 4, true);
+    builder.addValueToMsg(0xbe7e8ef1, 4, true);
 
     // nonce
     this.nonceHex = this.nonceHex || BI.bigInt2str(BI.randBigInt(128), 16);
     console.log("nonce_hex", this.nonceHex);
-    let j = skip;
-    bytesFromHex(this.nonceHex).forEach(b => {
-      view.setUint8(j, b);
-      j++;
-      skip++;
-    });
+    builder.addStrToMsg(this.nonceHex);
 
-    return new Uint8Array(buf);
+    return builder.getBytes();
   }
 
   processMessage(msg) {
@@ -142,7 +119,7 @@ class AuthKeyExchange {
     }
     const lastMsg = this.incomingMsgs[this.incomingMsgs.length - 1];
 
-    switch(lastMsg.type) {
+    switch (lastMsg.type) {
       // resPQ
       case "05162463":
         const msg = this.buildReqDHParams(lastMsg);
