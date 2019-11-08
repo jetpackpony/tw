@@ -6,6 +6,7 @@ const {
 } = require('../primeFactorization');
 const pow2to32 = BI.str2bigInt("4294967296", 10, 1);
 const { MessageBuilder } = require('../MessageBuilder');
+const randomBytes = require('randombytes');
 
 const parseUnencryptedMessage = (msg) => {
   const res = {
@@ -50,12 +51,16 @@ class AuthKeyExchange {
   outgoingMsgs = [];
   incomingMsgs = [];
 
-  nonceHex;
+  nonce;
+  newNonce;
   msg_id_hex;
 
-  constructor({ nonceHex, msg_id_hex }) {
-    if (nonceHex) {
-      this.nonceHex = nonceHex;
+  constructor({ nonce, newNonce, msg_id_hex }) {
+    if (nonce) {
+      this.nonce = nonce;
+    }
+    if (newNonce) {
+      this.newNonce = newNonce;
     }
     if (msg_id_hex) {
       this.msg_id_hex = msg_id_hex;
@@ -91,9 +96,9 @@ class AuthKeyExchange {
     builder.addValueToMsg(0xbe7e8ef1, 4, true);
 
     // nonce
-    this.nonceHex = this.nonceHex || BI.bigInt2str(BI.randBigInt(128), 16);
-    console.log("nonce_hex", this.nonceHex);
-    builder.addStrToMsg(this.nonceHex);
+    this.nonce = this.nonce || new Uint8Array(randomBytes(16));
+    console.log("nonce", this.nonce);
+    builder.addValueToMsg(this.nonce);
 
     return builder.getBytes();
   }

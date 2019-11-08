@@ -13,7 +13,7 @@ const client = new net.Socket();
 client.connect(PORT, HOST, function () {
   console.log('CONNECTED TO: ' + HOST + ':' + PORT);
 
-  console.log('sending: ', msg.buffer);
+  console.log('sending messgae: ', msg);
   client.write(msg);
 });
 
