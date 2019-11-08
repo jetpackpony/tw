@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha src/**/test.js"
   },
   "keywords": [],
   "author": "",
@@ -13,5 +13,8 @@
     "big-number": "^2.0.0",
     "bigi": "^1.4.2",
     "leemon": "^6.2.0"
+  },
+  "devDependencies": {
+    "mocha": "^6.2.2"
   }
 }
