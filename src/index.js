@@ -1,5 +1,4 @@
 const net = require('net');
-const makeMsg = require('./makeMsg');
 const AuthKeyExchange = require('./AuthKeyExchange/AuthKeyExchange');
 
 // const HOST = '127.0.0.1';
