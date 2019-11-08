@@ -133,18 +133,47 @@ class AuthKeyExchange {
 
   buildReqDHParams(lastMsg) {
     const pq = pqPrimeFactorization(lastMsg.data.pq.slice(1, 9));
+
+    // generate new_nonce
+    this.newNonce = this.newNonce || new Uint8Array(randomBytes(32));
+    console.log("newNonce", this.newNonce);
+
+    // generate p_q_inner_data
     const innerData = this.makePQInnerData(lastMsg, pq[0], pq[1]);
 
     // find the server public key that corresponds to a fingerprint
+
     // encrypt innerData with that public key
     // build req_DH_params bytes
 
   }
 
   makePQInnerData(msg, p, q) {
-    // build p_q_inner_data bytes
+    const builder = new MessageBuilder();
+
+    // p_q_inner_data constructor
+    builder.addValueToMsg(0x83c95aec, 4, true);
+
+    // pq
+    builder.addValueToMsg(msg.data.pq);
+    
+    // p with padding
+    builder.addValueToMsg(4);
+    builder.addValueToMsg(p);
+    builder.addValueToMsg([0, 0, 0]);
+
+    // q with padding
+    builder.addValueToMsg(4);
+    builder.addValueToMsg(q);
+    builder.addValueToMsg([0, 0, 0]);
+
+    // nonces
+    builder.addValueToMsg(this.nonce);
+    builder.addValueToMsg(msg.data.server_nonce);
+    builder.addValueToMsg(this.newNonce);
 
     console.log('test');
+    return builder.getBytes();
   }
 }
 
