@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha src/**/test.js"
+    "test": "mocha src/**/test.js",
+    "prepare-public-keys": "node scripts/preparePublicKeys.js"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +14,7 @@
     "big-number": "^2.0.0",
     "bigi": "^1.4.2",
     "leemon": "^6.2.0",
+    "node-forge": "^0.9.1",
     "randombytes": "^2.1.0"
   },
   "devDependencies": {
