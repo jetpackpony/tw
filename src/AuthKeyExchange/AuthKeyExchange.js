@@ -7,6 +7,7 @@ const {
 const pow2to32 = BI.str2bigInt("4294967296", 10, 1);
 const { MessageBuilder } = require('../MessageBuilder');
 const randomBytes = require('randombytes');
+const publicKeys = require('../publicKeys.json');
 
 const parseUnencryptedMessage = (msg) => {
   const res = {
@@ -42,6 +43,17 @@ const parseResPQ = (msg) => {
   }
 
   return res;
+};
+
+const getPublicKey = (fingerprints) => {
+  //return [fingerPrint, key];
+  for(let i = 0; i < fingerprints.length; i++) {
+    const hexFP = bytesToHex(fingerprints[i]);
+    if (publicKeys[hexFP]) {
+      return [fingerprints[i], publicKeys[fingerprints[i]]];
+    }
+  }
+  return [null, null];
 };
 
 
@@ -142,7 +154,14 @@ class AuthKeyExchange {
     const innerData = this.makePQInnerData(lastMsg, pq[0], pq[1]);
 
     // find the server public key that corresponds to a fingerprint
+    const [fingerPrint, key] = getPublicKey(lastMsg.data.fingerprints);
+    if (!fingerPrint) {
+      console.error("Couldn't find any public key for fingerprint:", lastMsg.data.fingerprints);
+      return;
+    }
 
+    console.log("fingerpint", fingerPrint);
+    console.log("key", key);
     // encrypt innerData with that public key
     // build req_DH_params bytes
 
