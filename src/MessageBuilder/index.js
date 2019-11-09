@@ -1,4 +1,5 @@
 const { bytesFromHex } = require('../primeFactorization');
+const randomBytes = require('randombytes');
 
 function numToBytes (num, length, littleEndian = false) {
     const arr = new ArrayBuffer(length);
@@ -51,6 +52,20 @@ class MessageBuilder {
   getBytes() {
     return new Uint8Array(this.msg);
   }
+
+  padMessageToLength(len, rand = false, val = 0) {
+    const lenDiff = len - this.msg.length;
+    if (lenDiff <= 0) return;
+
+    const padding = 
+      (rand)
+        ? new Uint8Array(randomBytes(lenDiff))
+        : (new Uint8Array(lenDiff)).fill(val);
+    
+    this.addValueToMsg(padding);
+    return padding;
+  }
+
 }
 
 module.exports = { MessageBuilder, numToBytes };

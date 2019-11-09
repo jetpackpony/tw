@@ -8,6 +8,7 @@ const pow2to32 = BI.str2bigInt("4294967296", 10, 1);
 const { MessageBuilder } = require('../MessageBuilder');
 const randomBytes = require('randombytes');
 const publicKeys = require('../publicKeys.json');
+const { bytesToSHA1, TL_RSA } = require("../crypto");
 
 const parseUnencryptedMessage = (msg) => {
   const res = {
@@ -30,8 +31,8 @@ const parseUnencryptedMessage = (msg) => {
 
 const parseResPQ = (msg) => {
   const res = {
-    nonce: msg.slice(0, 16).reverse(),
-    server_nonce: msg.slice(16, 32).reverse(),
+    nonce: msg.slice(0, 16),
+    server_nonce: msg.slice(16, 32),
     pq: msg.slice(32, 44),
     //vector: msg.slice(44, 48),
     count: msg.slice(48, 52).reverse(),
@@ -50,12 +51,37 @@ const getPublicKey = (fingerprints) => {
   for(let i = 0; i < fingerprints.length; i++) {
     const hexFP = bytesToHex(fingerprints[i]);
     if (publicKeys[hexFP]) {
-      return [fingerprints[i], publicKeys[fingerprints[i]]];
+      return [fingerprints[i], publicKeys[hexFP]];
     }
   }
   return [null, null];
 };
 
+
+
+const serializeString = (bytes) => {
+  const len = bytes.length;
+  let header = [];
+  if (len <= 253) {
+    header.push(len);
+  } else {
+    header.push(254);
+    header.push(len & 0xff);
+    header.push((len >> 8) & 0xff);
+    header.push((len >> 16) & 0xff);
+  }
+  const padNum = 4 - ((header.length + bytes.length) % 4);
+  let padding = [];
+  if (padNum > 0 && padNum < 4) {
+    padding = (new Array(padNum)).fill(0);
+  }
+  const buf = new ArrayBuffer(header.length + bytes.length + padding.length);
+  const uint8 = new Uint8Array(buf);
+  uint8.set(header, 0);
+  uint8.set(bytes, header.length);
+  uint8.set(padding, header.length + bytes.length);
+  return uint8;
+};
 
 
 class AuthKeyExchange {
@@ -81,12 +107,6 @@ class AuthKeyExchange {
 
   makeInitialMessage() {
     const builder = new MessageBuilder();
-
-    // envelope header
-    builder.addValueToMsg(0xef);
-
-    // env length
-    builder.addValueToMsg(40 / 4);
 
     // auth_key_id
     builder.addValueToMsg(Array(8).fill(0));
@@ -116,8 +136,8 @@ class AuthKeyExchange {
   }
 
   processMessage(msg) {
-    const newRes = new Uint8Array(msg.slice(1));
-    const parsed = parseUnencryptedMessage(newRes);
+    const parsed = parseUnencryptedMessage(msg);
+
     ///////////
     // should check the message here
     /////////
@@ -135,7 +155,7 @@ class AuthKeyExchange {
     switch (lastMsg.type) {
       // resPQ
       case "05162463":
-        const msg = this.buildReqDHParams(lastMsg);
+        const msg = this.makeReqDHParamsMsg(lastMsg);
         this.outgoingMsgs.push(msg);
         return msg;
       default:
@@ -143,7 +163,7 @@ class AuthKeyExchange {
     }
   }
 
-  buildReqDHParams(lastMsg) {
+  makeReqDHParamsMsg(lastMsg) {
     const pq = pqPrimeFactorization(lastMsg.data.pq.slice(1, 9));
 
     // generate new_nonce
@@ -160,11 +180,65 @@ class AuthKeyExchange {
       return;
     }
 
-    console.log("fingerpint", fingerPrint);
-    console.log("key", key);
-    // encrypt innerData with that public key
-    // build req_DH_params bytes
+    // build data_with_hash
+    const dataWithHash = this.buildDataWithHash(innerData);
 
+    // encrypt data_with_hash
+    const encData = TL_RSA(dataWithHash, key);
+
+    return this.buildReqDHParams(lastMsg.data.server_nonce, pq[0], pq[1], fingerPrint, encData);
+  }
+
+  buildDataWithHash(innerData) {
+    const dataBuilder = new MessageBuilder();
+    dataBuilder.addValueToMsg(bytesToSHA1(innerData));
+    dataBuilder.addValueToMsg(innerData);
+    dataBuilder.padMessageToLength(255, true);
+    return dataBuilder.getBytes();
+  }
+
+  buildReqDHParams(serverNonce, p, q, fingerPrint, encData) {
+    const builder = new MessageBuilder();
+
+    // auth_key_id
+    builder.addValueToMsg(Array(8).fill(0));
+
+    // message_id
+    if (!this.msg_id_hex) {
+      const unixTime = BI.int2bigInt(Math.floor(new Date() / 1000), 32, 1);
+      const msg_id = BI.mult(unixTime, pow2to32);
+      this.msg_id_hex = BI.bigInt2str(msg_id, 16);
+    }
+    builder.addStrToMsg(this.msg_id_hex, true);
+
+    // message_length
+    builder.addValueToMsg(320, 4, true);
+
+    // %(req_DH_params)
+    builder.addValueToMsg(0xd712e4be, 4, true);
+
+    // nonces
+    builder.addValueToMsg(this.nonce);
+    builder.addValueToMsg(serverNonce);
+
+    // p with padding
+    builder.addValueToMsg(4);
+    builder.addValueToMsg(p);
+    builder.addValueToMsg([0, 0, 0]);
+
+    // q with padding
+    builder.addValueToMsg(4);
+    builder.addValueToMsg(q);
+    builder.addValueToMsg([0, 0, 0]);
+
+    // public_key_fingerprint
+    builder.addValueToMsg(fingerPrint, 1, true);
+
+    // encrypted data
+    builder.addValueToMsg([254, 0, 1, 0]);
+    builder.addValueToMsg(encData);
+
+    return builder.getBytes();
   }
 
   makePQInnerData(msg, p, q) {
@@ -191,8 +265,9 @@ class AuthKeyExchange {
     builder.addValueToMsg(msg.data.server_nonce);
     builder.addValueToMsg(this.newNonce);
 
-    console.log('test');
-    return builder.getBytes();
+    const bytes = builder.getBytes();
+    const ser = serializeString(bytes);
+    return ser;
   }
 }
 
