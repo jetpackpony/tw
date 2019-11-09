@@ -18,7 +18,7 @@ const serializeString = (bytes) => {
   res = res.concat(bytes);
   const padding = 4 - (res.length % 4);
   if (padding > 0 && padding < 4) {
-    res = res.concat((new Array(3)).fill(0));
+    res = res.concat((new Array(padding)).fill(0));
   }
   return res;
 };
