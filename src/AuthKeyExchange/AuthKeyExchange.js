@@ -43,6 +43,13 @@ const parseResPQ = (msg) => {
     res.fingerprints.push(msg.slice(i, i + 8));
   }
 
+  console.log("Parsed: ", {
+    nonce: bytesToHex(res.nonce),
+    server_nonce: bytesToHex(res.server_nonce),
+    pq: bytesToHex(res.pq),
+    fingerprints: res.fingerprints.map(bytesToHex)
+  });
+
   return res;
 };
 
@@ -157,6 +164,7 @@ class AuthKeyExchange {
       case "05162463":
         const msg = this.makeReqDHParamsMsg(lastMsg);
         this.outgoingMsgs.push(msg);
+        this.isComplete = true;
         return msg;
       default:
         console.log(`Message type was: ${res.type}. Couldn't build next request`);
@@ -191,9 +199,10 @@ class AuthKeyExchange {
 
   buildDataWithHash(innerData) {
     const dataBuilder = new MessageBuilder();
+    dataBuilder.addValueToMsg(0); // this is a leading zero byte so that fucking RSA works omg jesus christ documentation sucks balls
     dataBuilder.addValueToMsg(bytesToSHA1(innerData));
     dataBuilder.addValueToMsg(innerData);
-    dataBuilder.padMessageToLength(255, true);
+    dataBuilder.padMessageToLength(256, true);
     return dataBuilder.getBytes();
   }
 
@@ -232,7 +241,7 @@ class AuthKeyExchange {
     builder.addValueToMsg([0, 0, 0]);
 
     // public_key_fingerprint
-    builder.addValueToMsg(fingerPrint, 1, true);
+    builder.addValueToMsg(fingerPrint);
 
     // encrypted data
     builder.addValueToMsg([254, 0, 1, 0]);
@@ -266,8 +275,7 @@ class AuthKeyExchange {
     builder.addValueToMsg(this.newNonce);
 
     const bytes = builder.getBytes();
-    const ser = serializeString(bytes);
-    return ser;
+    return bytes;
   }
 }
 

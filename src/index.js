@@ -14,9 +14,6 @@ const packet = transport.packMessage(msg);
 
 const client = new net.Socket();
 client.connect(PORT, HOST, function () {
-  console.log('CONNECTED TO: ' + HOST + ':' + PORT);
-
-  console.log('sending messgae: ', packet);
   client.write(packet);
 });
 
@@ -27,10 +24,9 @@ client.on('data', function (data) {
   if (!exchange.isComplete) {
     const m = exchange.makeNextMessage();
     const nextMessage = transport.packMessage(m);
-    console.log("sending message: ", nextMessage);
     client.write(nextMessage);
   } else {
-    //client.close();
+    client.close();
   }
 });
 
