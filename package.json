@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha src/**/test.js",
-    "prepare-public-keys": "node scripts/preparePublicKeys.js"
+    "prepare-public-keys": "node scripts/preparePublicKeys.js",
+    "start": "node src/index.js"
   },
   "keywords": [],
   "author": "",
