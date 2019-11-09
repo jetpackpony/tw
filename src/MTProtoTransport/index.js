@@ -1,7 +1,10 @@
+const { bytesToHex } = require("../primeFactorization");
 class Abridged {
   initialByteSent = false;
 
   packMessage(bytes) {
+    console.log('sending message: ', bytesToHex(bytes));
+
     const header = [];
     if (!this.initialByteSent) {
       this.initialByteSent = true;
@@ -23,12 +26,13 @@ class Abridged {
     uint8.set(header, 0);
     uint8.set(bytes, header.length);
 
+
     return uint8;
   }
 
   unpackMessage(data) {
     const uint8 = new Uint8Array(data);
-    console.log('data recieved: ', uint8.toString());
+    console.log('data str: ', uint8.toString());
 
     let len, offset;
     if (uint8[0] === 127) {
@@ -44,6 +48,7 @@ class Abridged {
       console.log(`Data is corrupt: proclaimed length is ${len}, actual: ${data.length} `);
       return;
     }
+    console.log('message recieved: ', bytesToHex(msg));
 
     return msg;
   }
