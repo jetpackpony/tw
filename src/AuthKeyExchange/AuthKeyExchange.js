@@ -8,7 +8,7 @@ const pow2to32 = BI.str2bigInt("4294967296", 10, 1);
 const { MessageBuilder } = require('../MessageBuilder');
 const randomBytes = require('randombytes');
 const publicKeys = require('../publicKeys.json');
-const { bytesToSHA1, TL_RSA, decryptAES } = require("../crypto");
+const { bytesToSHA1, TL_RSA, decryptAES, encryptAES, makeG_B, makeAuthKey } = require("../crypto");
 const { makeTmpAESKeys } = require("../utils");
 
 
@@ -89,8 +89,11 @@ class AuthKeyExchange {
   nonce;
   newNonce;
   msg_id_hex;
+  b;
 
-  constructor({ nonce, newNonce, msg_id_hex }) {
+  retryId = 0;
+
+  constructor({ nonce, newNonce, msg_id_hex, b }) {
     if (nonce) {
       this.nonce = nonce;
     }
@@ -99,6 +102,9 @@ class AuthKeyExchange {
     }
     if (msg_id_hex) {
       this.msg_id_hex = msg_id_hex;
+    }
+    if (b) {
+      this.b = b;
     }
   }
 
@@ -123,6 +129,12 @@ class AuthKeyExchange {
       // server_DH_params_fail
       case "79cb045d":
         console.log(`server_DH_params_fail Recieved!`);
+        return;
+      // dh_gen_ok
+      case "3bcbf734":
+        res.data = this.parseDHGenOK(res.data);
+        this.isComplete = true;
+        return res;
       default:
         console.log(`Message type was: ${res.type}. Couldn't handle`);
     }
@@ -161,19 +173,39 @@ class AuthKeyExchange {
     // generate tmp keys
     const [key, iv] = makeTmpAESKeys(this.newNonce, res.server_nonce);
     const answer = decryptDHAnswer(res.encrypted_answer, key, iv);
+    this.tmp_aes_key = key;
+    this.tmp_aes_iv = iv;
 
     const out = {
       nonce: res.nonce,
       server_nonce: res.server_nonce,
       server_DH_inner_data: answer.slice(0, 4).reverse(),
-      nonce: answer.slice(4, 16),
-      server_nonce: answer.slice(20, 16),
+      nonce: answer.slice(4, 20),
+      server_nonce: answer.slice(20, 36),
       g: answer.slice(36, 40).reverse(),
       dh_prime: unserializeString(answer.slice(40, 300)),
       g_a : unserializeString(answer.slice(300, 560)),
       server_time: answer.slice(560, 564).reverse(),
     };
     return out;
+  }
+
+  parseDHGenOK(msg) {
+    const res = {
+      nonce: msg.slice(0, 16),
+      server_nonce: msg.slice(16, 32),
+      new_nonce_hash1: msg.slice(32, 48)
+    };
+    return res;
+  }
+
+  completeAuth() {
+    console.log();
+    const paramsMsg = this.incomingMsgs[this.incomingMsgs.length - 2];
+    const g_a = paramsMsg.data.g_a;
+    const dh_prime = paramsMsg.data.dh_prime;
+    const authKey = makeAuthKey(g_a, this.b, dh_prime);
+    return authKey;
   }
 
   makeInitialMessage() {
@@ -200,7 +232,7 @@ class AuthKeyExchange {
 
     // nonce
     this.nonce = this.nonce || new Uint8Array(randomBytes(16));
-    console.log("nonce", this.nonce);
+    console.log("===> nonce generated: ", bytesToHex(this.nonce));
     builder.addValueToMsg(this.nonce);
 
     return builder.getBytes();
@@ -228,11 +260,89 @@ class AuthKeyExchange {
       case "05162463":
         const msg = this.makeReqDHParamsMsg(lastMsg);
         this.outgoingMsgs.push(msg);
-        this.isComplete = true;
         return msg;
+      // server_DH_params_ok
+      case "d0e8075c":
+        this.checkDHParams(lastMsg);
+        const dhMsg = this.setClientDHParamsMsg(lastMsg);
+        this.outgoingMsgs.push(dhMsg);
+        return dhMsg;
       default:
         console.log(`Message type was: ${res.type}. Couldn't build next request`);
     }
+  }
+
+  checkDHParams(lastMsg) {
+    // https://core.telegram.org/mtproto/auth_key step 5
+
+  }
+
+  setClientDHParamsMsg(lastMsg) {
+    this.b = this.b || new Uint8Array(randomBytes(256));
+    console.log("===> B generated: ", bytesToHex(this.b))
+    const g_b = makeG_B(lastMsg.data.g, this.b, lastMsg.data.dh_prime);
+    const innerData = this.buildClientDHInnerData(lastMsg.data.server_nonce, g_b);
+    const dataWithHash = this.buildClientDHInnerDataWithHash(innerData);
+    const encrypted = encryptAES(dataWithHash, this.tmp_aes_key, this.tmp_aes_iv);
+    const msg = this.buildSetClientDHParams(lastMsg.data.server_nonce, encrypted);
+    return msg;
+  }
+
+  buildClientDHInnerData(serverNonce, g_b) {
+    const builder = new MessageBuilder();
+
+    // p_q_inner_data constructor
+    builder.addValueToMsg(0x6643b654, 4, true);
+
+    // nonces
+    builder.addValueToMsg(this.nonce);
+    builder.addValueToMsg(serverNonce);
+
+    // retryId
+    builder.addValueToMsg(this.retryId, 8, true);
+
+    // g_b
+    builder.addValueToMsg(serializeString(g_b));
+
+    return builder.getBytes();
+  }
+
+  buildClientDHInnerDataWithHash(innerData) {
+    const dataBuilder = new MessageBuilder();
+    dataBuilder.addValueToMsg(bytesToSHA1(innerData));
+    dataBuilder.addValueToMsg(innerData);
+    dataBuilder.padMessageToLengthDevidedBy(16, true);
+    return dataBuilder.getBytes();
+  }
+
+  buildSetClientDHParams(serverNonce, encryptedData) {
+    const builder = new MessageBuilder();
+
+    // auth_key_id
+    builder.addValueToMsg(Array(8).fill(0));
+
+    // message_id
+    if (!this.msg_id_hex) {
+      const unixTime = BI.int2bigInt(Math.floor(new Date() / 1000), 32, 1);
+      const msg_id = BI.mult(unixTime, pow2to32);
+      this.msg_id_hex = BI.bigInt2str(msg_id, 16);
+    }
+    builder.addStrToMsg(this.msg_id_hex, true);
+
+    // message_length
+    builder.addValueToMsg(376, 4, true);
+
+    // set_client_DH_params constructor
+    builder.addValueToMsg(0xf5045f1f, 4, true);
+
+    // nonces
+    builder.addValueToMsg(this.nonce);
+    builder.addValueToMsg(serverNonce);
+
+    // data
+    builder.addValueToMsg(serializeString(encryptedData));
+
+    return builder.getBytes();
   }
 
   makeReqDHParamsMsg(lastMsg) {
@@ -240,7 +350,7 @@ class AuthKeyExchange {
 
     // generate new_nonce
     this.newNonce = this.newNonce || new Uint8Array(randomBytes(32));
-    console.log("newNonce", this.newNonce);
+    console.log("===> newNonce generated: ", bytesToHex(this.newNonce));
 
     // generate p_q_inner_data
     const innerData = this.makePQInnerData(lastMsg, pq[0], pq[1]);

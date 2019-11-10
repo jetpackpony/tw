@@ -66,6 +66,19 @@ class MessageBuilder {
     return padding;
   }
 
+  padMessageToLengthDevidedBy(len, rand = false, val = 0) {
+    const lenDiff = len - this.msg.length % len;
+    if (lenDiff <= 0 || lenDiff >= len) return;
+
+    const padding = 
+      (rand)
+        ? new Uint8Array(randomBytes(lenDiff))
+        : (new Uint8Array(lenDiff)).fill(val);
+    
+    this.addValueToMsg(padding);
+    return padding;
+  }
+
 }
 
 module.exports = { MessageBuilder, numToBytes };

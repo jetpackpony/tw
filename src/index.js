@@ -26,6 +26,7 @@ client.on('data', function (data) {
     const nextMessage = transport.packMessage(m);
     client.write(nextMessage);
   } else {
+    const authKey = exchange.completeAuth();
     client.close();
   }
 });
