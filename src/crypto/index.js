@@ -22,8 +22,7 @@ const TL_RSA = (data, keyStr) => {
 };
 
 const decryptAES = (bytes, key, iv) => {
-  const res = decrypt(bytes, key, iv);
-  return res;
+  return decrypt(bytes, key, iv);
 };
 
 module.exports = {
