@@ -3,8 +3,9 @@ const {
   pqPrimeFactorization,
   bytesToHex,
   bytesFromHex
-} = require('./primeFactorization');
+} = require('../primeFactorization');
 const BI = require('leemon');
+const { decrypt } = require('./aes_ige');
 
 const bytesToSHA1 = (bytes, returnHex = false) => {
   const str = String.fromCharCode(...bytes);
@@ -20,7 +21,13 @@ const TL_RSA = (data, keyStr) => {
   return bytes;
 };
 
+const decryptAES = (bytes, key, iv) => {
+  const res = decrypt(bytes, key, iv);
+  return res;
+};
+
 module.exports = {
   bytesToSHA1,
-  TL_RSA
+  TL_RSA,
+  decryptAES
 };
