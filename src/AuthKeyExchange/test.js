@@ -5,7 +5,6 @@ describe('AuthKeyExchange', function() {
   describe('makeInitialMessage', function() {
     it('should return correct bytes', function () {
       const correct = Uint8Array.from([
-        239, 10,
         0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 3, 113, 197, 93,
         20, 0, 0, 0,
