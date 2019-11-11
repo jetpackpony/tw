@@ -1,5 +1,6 @@
 const AuthKeyExchange = require('./AuthKeyExchange/AuthKeyExchange');
 const { bytesFromHex } = require('./primeFactorization');
+const fs = require('fs');
 
 const outgoing = [];
 const incoming = [
@@ -23,5 +24,7 @@ exchange.processMessage(incoming[1]);
 
 outgoing.push(exchange.makeNextMessage());
 exchange.processMessage(incoming[2]);
-const authKey = exchange.completeAuth();
+const authResult = exchange.completeAuth();
 console.log();
+
+fs.writeFileSync('./src/authResult.json', JSON.stringify(authResult, null, 2));

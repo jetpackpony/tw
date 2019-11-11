@@ -9,7 +9,7 @@ const { MessageBuilder } = require('../MessageBuilder');
 const randomBytes = require('randombytes');
 const publicKeys = require('../publicKeys.json');
 const { bytesToSHA1, TL_RSA, decryptAES, encryptAES, makeG_B, makeAuthKey } = require("../crypto");
-const { makeTmpAESKeys } = require("../utils");
+const { makeTmpAESKeys, xorArrays } = require("../utils");
 
 
 const decryptDHAnswer = (encAnswer, key, iv) => {
@@ -205,7 +205,14 @@ class AuthKeyExchange {
     const g_a = paramsMsg.data.g_a;
     const dh_prime = paramsMsg.data.dh_prime;
     const authKey = makeAuthKey(g_a, this.b, dh_prime);
-    return authKey;
+    const salt = xorArrays(this.newNonce.slice(0, 8), paramsMsg.data.server_nonce.slice(0, 8));
+    const auth_key_id = bytesToSHA1(authKey).slice(-8);
+    return {
+      authKey,
+      serverTime: paramsMsg.data.server_time,
+      salt,
+      auth_key_id
+    };
   }
 
   makeInitialMessage() {

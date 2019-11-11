@@ -28,4 +28,12 @@ const concatUint8 = (listOfArrays) => {
   return uint8;
 };
 
-module.exports = { makeTmpAESKeys };
+const xorArrays = (arr1, arr2) => {
+  const res = new Uint8Array(new ArrayBuffer(arr1.length));
+	for (let i = 0; i < arr1.length; i++) {
+    res[i] = arr1[i] ^ arr2[i];
+  }
+  return res;
+}
+
+module.exports = { makeTmpAESKeys, xorArrays };
