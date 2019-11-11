@@ -27,4 +27,4 @@ exchange.processMessage(incoming[2]);
 const authResult = exchange.completeAuth();
 console.log();
 
-fs.writeFileSync('./src/authResult.json', JSON.stringify(authResult, null, 2));
+fs.writeFileSync('./src/authResult-test.json', JSON.stringify(authResult, null, 2));

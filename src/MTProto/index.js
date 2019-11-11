@@ -14,24 +14,23 @@ const makeSocket = async () => {
 
     const socket = new net.Socket();
     const sendMsg = (msg) => {
-      socket.write(transport.packMessage(m));
+      socket.write(transport.packMessage(msg));
     };
     const addOnMsgListener = (f) => {
       listeners.push(f);
     };
+
+    socket.on('data', function (data) {
+      listeners.forEach((f) => f(transport.unpackMessage(data)));
+    });
+    socket.on('close', function () {
+      console.log('Connection closed');
+    });
     socket.connect(port, host, () => {
       resolve({
         sendMsg,
         addOnMsgListener
       });
-    });
-
-    socket.on('data', function (data) {
-      listeners.forEach((f) => f(transport.unpackMessage(data)));
-    });
-
-    socket.on('close', function () {
-      console.log('Connection closed');
     });
   });
 };
@@ -40,7 +39,7 @@ const MTProto = async ({ apiId, apiHash, socket }) => {
   const sock = await(
     (socket)
       ? Promise.resolve(socket)
-      : makeSocket(server, onMsg)
+      : makeSocket()
   );
   const client = new Client({ apiId, apiHash, sendMsg: sock.sendMsg });
   const onMsg = client.msgRecieved.bind(client);

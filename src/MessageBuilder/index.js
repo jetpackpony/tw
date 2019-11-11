@@ -66,9 +66,13 @@ class MessageBuilder {
     return padding;
   }
 
-  padMessageToLengthDevidedBy(len, rand = false, val = 0) {
-    const lenDiff = len - this.msg.length % len;
+  padMessageToLengthDevidedBy(len, rand = false, val = 0, minBytes = 0, maxBytes) {
+    let lenDiff = len - this.msg.length % len;
     if (lenDiff <= 0 || lenDiff >= len) return;
+
+    if (lenDiff < minBytes) {
+      lenDiff += len;
+    }
 
     const padding = 
       (rand)

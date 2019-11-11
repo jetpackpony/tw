@@ -204,9 +204,9 @@ class AuthKeyExchange {
     const paramsMsg = this.incomingMsgs[this.incomingMsgs.length - 2];
     const g_a = paramsMsg.data.g_a;
     const dh_prime = paramsMsg.data.dh_prime;
-    const authKey = makeAuthKey(g_a, this.b, dh_prime);
+    const authKey = Uint8Array.from(makeAuthKey(g_a, this.b, dh_prime));
     const salt = xorArrays(this.newNonce.slice(0, 8), paramsMsg.data.server_nonce.slice(0, 8));
-    const auth_key_id = bytesToSHA1(authKey).slice(-8);
+    const auth_key_id = Uint8Array.from(bytesToSHA1(authKey).slice(-8));
     return {
       authKey,
       serverTime: paramsMsg.data.server_time,

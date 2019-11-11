@@ -1,3 +1,4 @@
+const fs = require('fs');
 const net = require('net');
 const { Abridged } = require('./MTProtoTransport');
 const AuthKeyExchange = require('./AuthKeyExchange/AuthKeyExchange');
@@ -26,8 +27,9 @@ client.on('data', function (data) {
     const nextMessage = transport.packMessage(m);
     client.write(nextMessage);
   } else {
-    const authKey = exchange.completeAuth();
-    client.close();
+    const authResult = exchange.completeAuth();
+    fs.writeFileSync('./src/authResult.json', JSON.stringify(authResult, null, 2));
+    client.destroy();
   }
 });
 
