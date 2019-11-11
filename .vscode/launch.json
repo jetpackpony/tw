@@ -14,7 +14,13 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Test",
+      "name": "MTProto Test",
+      "program": "${workspaceFolder}/src/index-msg-test.js"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "AuthKeyExchangeTest",
       "program": "${workspaceFolder}/src/AuthKeyExchangeTest.js"
     },
     {
@@ -22,6 +28,12 @@
       "request": "launch",
       "name": "Prepare Public Keys",
       "program": "${workspaceFolder}/scripts/preparePublicKeys.js"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "AES-IGE Orig",
+      "program": "${workspaceFolder}/src/crypto/aes_ige_orig.js"
     },
     {
       "type": "node",
