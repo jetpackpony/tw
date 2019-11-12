@@ -7,9 +7,9 @@ const Client = require('./Client');
 const host = '149.154.167.40';
 const port = '443';
 
-const makeSocket = async () => {
+const makeSocket = async (obfuscated = true) => {
   return new Promise((resolve, reject) => {
-    const transport = new Abridged();
+    const transport = new Abridged(obfuscated);
     const listeners = [];
 
     const socket = new net.Socket();
@@ -21,12 +21,18 @@ const makeSocket = async () => {
     };
 
     socket.on('data', function (data) {
-      listeners.forEach((f) => f(transport.unpackMessage(data)));
+      const unpacked = transport.unpackMessage(data);
+      listeners.forEach((f) => f(unpacked));
     });
     socket.on('close', function () {
       console.log('Connection closed');
     });
     socket.connect(port, host, () => {
+      if (obfuscated) {
+        const initPayload = transport.packObfInitPayload();
+        socket.write(initPayload);
+      }
+
       resolve({
         sendMsg,
         addOnMsgListener
@@ -39,7 +45,7 @@ const MTProto = async ({ apiId, apiHash, socket }) => {
   const sock = await(
     (socket)
       ? Promise.resolve(socket)
-      : makeSocket()
+      : makeSocket(true)
   );
   const client = new Client({ apiId, apiHash, sendMsg: sock.sendMsg });
   const onMsg = client.msgRecieved.bind(client);
