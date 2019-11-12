@@ -20,6 +20,12 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "Transport Test",
+      "program": "${workspaceFolder}/src/MTProtoTransport/manualTest.js"
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "AuthKeyExchangeTest",
       "program": "${workspaceFolder}/src/AuthKeyExchangeTest.js"
     },
