@@ -59,12 +59,33 @@ const encryptAES = (bytes, key, iv) => {
   return encrypt(bytes, key, iv);
 };
 
+const encryptAES_CTR = (bytes, key, iv) => {
+  const cipher = forge.cipher.createCipher('AES-CTR', forge.util.createBuffer(key));
+  cipher.start({ iv: forge.util.createBuffer(iv) });
+  cipher.update(forge.util.createBuffer(bytes));
+  cipher.finish();
+  const res = Uint8Array.from(bytesFromHex(cipher.output.toHex()));
+  return res;
+};
+
+const decryptAES_CTR  = (bytes, key, iv) => {
+  var decipher = forge.cipher.createDecipher('AES-CTR', forge.util.createBuffer(key));
+  decipher.start({ iv: forge.util.createBuffer(iv) });
+  decipher.update(forge.util.createBuffer(bytes));
+  if (!decipher.finish()) {
+    throw("Failed to decrypt");
+  }
+  return Uint8Array.from(bytesFromHex(decipher.output.toHex()));
+};
+
 module.exports = {
   bytesToSHA1,
   bytesToSHA256,
   TL_RSA,
   decryptAES,
   encryptAES,
+  encryptAES_CTR,
+  decryptAES_CTR,
   makeG_B,
   makeAuthKey
 };
