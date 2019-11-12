@@ -147,12 +147,25 @@ const bytesToInt = (bytes, littleEndian = true) => {
   return view.getInt32(0);
 };
 
+const intToBytes = (num, size = 4, littleEndian = true) => {
+  const arr = new ArrayBuffer(size);
+  const view = new DataView(arr);
+  switch (size) {
+    case 4:
+      view.setUint32(0, num, littleEndian);
+      break;
+  }
+  return new Uint8Array(arr);
+};
+
 module.exports = {
+  concatUint8,
   makeTmpAESKeys,
   xorArrays,
   serializeString,
   unserializeString,
   makeMsgIdHex,
   getEncryptionParams,
-  bytesToInt
+  bytesToInt,
+  intToBytes
 };
