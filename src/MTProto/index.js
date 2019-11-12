@@ -1,5 +1,5 @@
 const net = require('net');
-const { Abridged } = require('../MTProtoTransport');
+const { IntermediatePadded } = require('../MTProtoTransport');
 const Client = require('./Client');
 
 // const host = '127.0.0.1';
@@ -9,7 +9,7 @@ const port = '443';
 
 const makeSocket = async (obfuscated = true) => {
   return new Promise((resolve, reject) => {
-    const transport = new Abridged(obfuscated);
+    const transport = new IntermediatePadded(obfuscated);
     const listeners = [];
 
     const socket = new net.Socket();
@@ -45,7 +45,7 @@ const MTProto = async ({ apiId, apiHash, socket }) => {
   const sock = await(
     (socket)
       ? Promise.resolve(socket)
-      : makeSocket(true)
+      : makeSocket()
   );
   const client = new Client({ apiId, apiHash, sendMsg: sock.sendMsg });
   const onMsg = client.msgRecieved.bind(client);

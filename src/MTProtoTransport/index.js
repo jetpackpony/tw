@@ -1,4 +1,4 @@
-const { concatUint8 } = require('../utils');
+const { concatUint8, intToBytes, bytesToInt } = require('../utils');
 const randomBytes = require('randombytes');
 const { bytesToHex, bytesFromHex } = require("../primeFactorization");
 const {
@@ -7,16 +7,17 @@ const {
   bytesToSHA256
 } = require('../crypto');
 
-class Abridged {
+class IntermediatePadded {
   initialByteSent = false;
   obfuscated = false;
   obfParams = {};
   obfInitPayloadSent = false;
+  protocolHeader = 0xdddddddd;
 
   constructor(obfuscated = false) {
     this.obfuscated = obfuscated;
     if (this.obfuscated) {
-      this.obfParams = makeObfuscationParams("efefefef");
+      this.obfParams = makeObfuscationParams(this.protocolHeader);
     }
   }
 
@@ -31,26 +32,26 @@ class Abridged {
     }
     console.log('===> Sending message: ', bytesToHex(bytes));
 
-    const header = [];
+    let header = [];
     if (!this.initialByteSent && !this.obfuscated) {
       this.initialByteSent = true;
-      header.push(0xef);
-    }
-
-    const len = bytes.length / 4;
-    if (len >= 127) {
-      header.push(127);
-      header.push(len & 0xff);
-      header.push((len >> 8) & 0xff);
-      header.push((len >> 16) & 0xff);
-    } else {
-      header.push(len);
+      header = intToBytes(this.protocolHeader);
     }
     
-    const buf = new ArrayBuffer(header.length + bytes.length);
+    // Generate 0-15 random bytes
+    const padding = randomBytes(Math.round(Math.random() * 15));
+    const p = new ArrayBuffer(bytes.length + padding.length);
+    let payload = new Uint8Array(p);
+    payload.set(bytes, 0);
+    payload.set(padding, bytes.length);
+
+    const len = intToBytes(payload.length);
+    
+    const buf = new ArrayBuffer(header.length + len.length + payload.length);
     let uint8 = new Uint8Array(buf);
     uint8.set(header, 0);
-    uint8.set(bytes, header.length);
+    uint8.set(len, header.length);
+    uint8.set(payload, header.length + len.length);
 
     if (this.obfuscated) {
       uint8 = encryptAES_CTR(
@@ -73,17 +74,10 @@ class Abridged {
       );
     }
 
-    let len, offset;
-    if (uint8[0] === 127) {
-      len = uint8[1] * 1 + uint8[2] * 256 + uint8[3] * 4096;
-      offset = 4;
-    } else {
-      len = uint8[0];
-      offset = 1;
-    }
-    const msg = uint8.slice(offset);
+    const len = bytesToInt(uint8.slice(0, 4));
+    const msg = uint8.slice(4);
 
-    if ((len * 4 + offset) !== data.length) {
+    if (len !== uint8.length - 4) {
       console.log(`Data is corrupt: proclaimed length is ${len}, actual: ${data.length} `);
       return;
     }
@@ -97,12 +91,12 @@ const badFirstInts = [
   "44414548", "54534f50", "20544547",
   "4954504f", "dddddddd", "eeeeeeee",
 ];
-const makeObfuscationParams = (protocolHeader = "efefefef") => {
+const makeObfuscationParams = (protocolHeader) => {
   let init;
   while(true) {
     init = concatUint8([
       Uint8Array.from(randomBytes(56)),
-      bytesFromHex(protocolHeader),
+      intToBytes(protocolHeader),
       Uint8Array.from(randomBytes(4))
     ]);
 
@@ -129,9 +123,6 @@ const makeObfuscationParams = (protocolHeader = "efefefef") => {
   let decryptKey = initRev.slice(8, 40);
   const decryptIV = initRev.slice(40, 56);
 
-  // encryptKey = bytesToSHA256(encryptKey);
-  // decryptKey = bytesToSHA256(decryptKey);
-
   const encryptedInit = encryptAES_CTR(init, encryptKey, encryptIV);
 
   const finalInit = concatUint8([
@@ -148,4 +139,4 @@ const makeObfuscationParams = (protocolHeader = "efefefef") => {
   };
 };
 
-module.exports = { Abridged };
+module.exports = { IntermediatePadded };

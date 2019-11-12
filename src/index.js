@@ -1,6 +1,6 @@
 const fs = require('fs');
 const net = require('net');
-const { Abridged } = require('./MTProtoTransport');
+const { IntermediatePadded } = require('./MTProtoTransport');
 const AuthKeyExchange = require('./AuthKeyExchange/AuthKeyExchange');
 
 // const HOST = '127.0.0.1';
@@ -8,7 +8,7 @@ const AuthKeyExchange = require('./AuthKeyExchange/AuthKeyExchange');
 const HOST = '149.154.167.40';
 const PORT = '443';
 
-const transport = new Abridged();
+const transport = new IntermediatePadded(false);
 const exchange = new AuthKeyExchange({});
 const msg = exchange.makeNextMessage();
 const packet = transport.packMessage(msg);
