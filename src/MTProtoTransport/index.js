@@ -7,22 +7,29 @@ const {
   bytesToSHA256
 } = require('../crypto');
 
+const getRandomBytes = () => {
+  return randomBytes(Math.round(Math.random() * 15));
+};
+
 class IntermediatePadded {
   initialByteSent = false;
   obfuscated = false;
   obfParams = {};
-  obfInitPayloadSent = false;
   protocolHeader = 0xdddddddd;
+  getRandomBytes = false;
 
-  constructor(obfuscated = false) {
+  constructor(obfuscated = false, testing) {
     this.obfuscated = obfuscated;
+    this.getRandomBytes = (testing) ? testing.getRandomBytes : getRandomBytes;
     if (this.obfuscated) {
-      this.obfParams = makeObfuscationParams(this.protocolHeader);
+      this.obfParams =
+        (testing)
+          ? testing.obfParams
+          : makeObfuscationParams(this.protocolHeader);
     }
   }
 
   packObfInitPayload() {
-    this.obfInitPayloadSent = true;
     return this.obfParams.initPayload;
   }
 
@@ -34,34 +41,24 @@ class IntermediatePadded {
       if (!this.obfuscated) {
         header = intToBytes(this.protocolHeader);
       } else {
-        //header = this.packObfInitPayload();
+        header = this.packObfInitPayload();
       }
       this.initialByteSent = true;
     }
     
     // Generate 0-15 random bytes
-    //const padding = randomBytes(Math.round(Math.random() * 15));
-    const padding = randomBytes(4);
-    const p = new ArrayBuffer(bytes.length + padding.length);
-    let payload = new Uint8Array(p);
-    payload.set(bytes, 0);
-    payload.set(padding, bytes.length);
+    const padding = this.getRandomBytes();
+    const len = intToBytes(bytes.length + padding.length);
 
-    const len = intToBytes(payload.length);
-    
-    const buf = new ArrayBuffer(header.length + len.length + payload.length);
-    let uint8 = new Uint8Array(buf);
-    uint8.set(header, 0);
-    uint8.set(len, header.length);
-    uint8.set(payload, header.length + len.length);
-
+    let encrypted = concatUint8([bytes, padding]);
     if (this.obfuscated) {
-      uint8 = encryptAES_CTR(
-        uint8,
+      encrypted = encryptAES_CTR(
+        encrypted,
         this.obfParams.encryptKey,
         this.obfParams.encryptIV
       );
     }
+    const uint8 = concatUint8([header, len, encrypted]);
 
     return uint8;
   }
