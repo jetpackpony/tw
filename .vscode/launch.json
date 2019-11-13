@@ -14,6 +14,12 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "Index WS",
+      "program": "${workspaceFolder}/src/index-ws.js"
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "MTProto Test",
       "program": "${workspaceFolder}/src/index-msg-test.js"
     },
