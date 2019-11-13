@@ -27,19 +27,21 @@ class IntermediatePadded {
   }
 
   packMessage(bytes) {
-    if (this.obfuscated && !this.obfInitPayloadSent) {
-      throw("Using obfuscated protocol. Before sending messages, need to send init payload first");
-    }
     console.log('===> Sending message: ', bytesToHex(bytes));
 
     let header = [];
-    if (!this.initialByteSent && !this.obfuscated) {
+    if (!this.initialByteSent) {
+      if (!this.obfuscated) {
+        header = intToBytes(this.protocolHeader);
+      } else {
+        //header = this.packObfInitPayload();
+      }
       this.initialByteSent = true;
-      header = intToBytes(this.protocolHeader);
     }
     
     // Generate 0-15 random bytes
-    const padding = randomBytes(Math.round(Math.random() * 15));
+    //const padding = randomBytes(Math.round(Math.random() * 15));
+    const padding = randomBytes(4);
     const p = new ArrayBuffer(bytes.length + padding.length);
     let payload = new Uint8Array(p);
     payload.set(bytes, 0);
