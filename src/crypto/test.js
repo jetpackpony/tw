@@ -1,7 +1,13 @@
 const expect = require('chai').expect;
 const { makeTmpAESKeys } = require("./index");
 const { bytesToHex, bytesFromHex } = require('../primeFactorization');
-const { decryptAES, encryptAES_CTR, decryptAES_CTR } = require('../crypto');
+const {
+  decryptAES,
+  encryptAES_CTR,
+  decryptAES_CTR,
+  makeEncryptorAES_CTR,
+  makeDecryptorAES_CTR
+} = require('../crypto');
 const { encrypt, decrypt } = require('./aes_ige');
 
 describe('AES-IGE', function () {
@@ -42,40 +48,34 @@ describe('AES-IGE', function () {
   });
 });
 
-describe('AES-CTR', function () {
-  var keys = [
-    '603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4'
+describe.only('AES-CTR', function () {
+  const input = Uint8Array.from(bytesFromHex("b11a087cdbf4401f2d471ad88a95901adb262d9785fe204da3090f9ff3ae43a697be93f2a3eb103350e8fb5ca14e0ea2fe06658f4e553dcbbc8363372141752d"));
+
+  const encKey = Uint8Array.from(bytesFromHex("2d471ad88a95901adb262d9785fe204da3090f9ff3ae43a697be93f2a3eb1033"));
+  const encIV = Uint8Array.from(bytesFromHex("50e8fb5ca14e0ea2fe06658f4e553dcb"));
+  const encOut = [
+    Uint8Array.from(bytesFromHex('589e5e519d21c34d283604735964587a160cc7e84f4bd964273f975adcf24b964115131c44fb6c4926bc7a32099e67790552eab358cd5205574fcedbdb329e2d')),
+    Uint8Array.from(bytesFromHex('3e6122a0bb5783c58b263f58064b65639be9a67b328388d75b53fd62a569db7e82352dcbca3fe86034ba91e668d141b024bace413f70a11af80778e2eca0678c')),
+    Uint8Array.from(bytesFromHex('11f25eae2f252570d1def310faec8eb780a0e1af747f7feed16795ebeedb9a845ed3e36550cedce0073f25ed045f33fc5aad6b92a0db6f07e71c3b22fb29c37c'))
   ];
-
-  var ivs = [
-    'f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff'
-  ];
-
-  var inputs = [
-    '6bc1bee22e409f96e93d7e117393172a' +
-    'ae2d8a571e03ac9c9eb76fac45af8e51' +
-    '30c81c46a35ce411e5fbc1191a0a52ef' +
-    'f69f2445df4f9b17ad2b417be66c3710'
-  ];
-
-  var outputs = [
-    '601ec313775789a5b7a7f504bbf3d228' +
-    'f443e3ca4d62b59aca84e990cacaf5c5' +
-    '2b0930daa23de94ce87017ba2d84988d' +
-    'dfc9c58db67aada613c2dd08457941a6'
-  ];
-
-  const key = Uint8Array.from(bytesFromHex(keys[0]));
-  const iv = Uint8Array.from(bytesFromHex(ivs[0]));
-  const input = Uint8Array.from(bytesFromHex(inputs[0]));
-  const output = Uint8Array.from(bytesFromHex(outputs[0]));
-
   it('should encrypt', function () {
-    const encrypted = encryptAES_CTR(input, key, iv);
-    expect(encrypted).to.eql(output);
+    const encryptor = makeEncryptorAES_CTR(encKey, encIV);
+    expect(encryptor.encrypt(input)).to.eql(encOut[0]);
+    expect(encryptor.encrypt(input)).to.eql(encOut[1]);
+    expect(encryptor.encrypt(input)).to.eql(encOut[2]);
   });
+
+  const decKey = Uint8Array.from(bytesFromHex("cb3d554e8f6506fea20e4ea15cfbe8503310eba3f293be97a643aef39f0f09a3"));
+  const decIV = Uint8Array.from(bytesFromHex("4d20fe85972d26db1a90958ad81a472d"));
+  const decOut = [
+    Uint8Array.from(bytesFromHex('222fc81cb9c6b02d62d2bd80ad1624ec29cf84f7344aca34a65ff8b70a01fdb7714cba4ec0e75f133be0dbbe73d1a161f37d8ff0b51ce4aafd47b7ff68230eac')),
+    Uint8Array.from(bytesFromHex('4717a870866f0e9c86116572b3551fe3c7795c6fd39956e76406a9626ed371f74e5736f730e5e5e778a46749c23bea79b2d3f010aade4ad7f8cc531a334486e5')),
+    Uint8Array.from(bytesFromHex('a0e21a7adb895aab57b71a12cdf5bc207da4cdfb2a8c54d67986f9424138b548a23ef56c614e099add61d30e9bf60ed4db52db19431a911440c4339e1570b545'))
+  ];
   it('should decrypt', function () {
-    const decrypted = decryptAES_CTR(output, key, iv);
-    expect(decrypted).to.eql(input);
+    const decryptor = makeDecryptorAES_CTR(decKey, decIV);
+    expect(decryptor.decrypt(input)).to.eql(decOut[0]);
+    expect(decryptor.decrypt(input)).to.eql(decOut[1]);
+    expect(decryptor.decrypt(input)).to.eql(decOut[2]);
   });
 });

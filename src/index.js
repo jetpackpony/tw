@@ -8,7 +8,7 @@ const AuthKeyExchange = require('./AuthKeyExchange/AuthKeyExchange');
 const HOST = '149.154.167.40';
 const PORT = '443';
 
-const transport = new IntermediatePadded(false);
+const transport = new IntermediatePadded(true);
 const exchange = new AuthKeyExchange({});
 const msg = exchange.makeNextMessage();
 const packet = transport.packMessage(msg);

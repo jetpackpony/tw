@@ -28,11 +28,6 @@ const makeSocket = async (obfuscated = true) => {
       console.log('Connection closed');
     });
     socket.connect(port, host, () => {
-      if (obfuscated) {
-        const initPayload = transport.packObfInitPayload();
-        socket.write(initPayload);
-      }
-
       resolve({
         sendMsg,
         addOnMsgListener

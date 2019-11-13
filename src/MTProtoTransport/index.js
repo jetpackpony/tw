@@ -4,7 +4,9 @@ const { bytesToHex, bytesFromHex } = require("../primeFactorization");
 const {
   encryptAES_CTR,
   decryptAES_CTR,
-  bytesToSHA256
+  bytesToSHA256,
+  makeEncryptorAES_CTR,
+  makeDecryptorAES_CTR
 } = require('../crypto');
 
 const getRandomBytes = () => {
@@ -34,8 +36,6 @@ class IntermediatePadded {
   }
 
   packMessage(bytes) {
-    console.log('===> Sending message: ', bytesToHex(bytes));
-
     let header = [];
     if (!this.initialByteSent) {
       if (!this.obfuscated) {
@@ -50,27 +50,21 @@ class IntermediatePadded {
     const padding = this.getRandomBytes();
     const len = intToBytes(bytes.length + padding.length);
 
-    let encrypted = concatUint8([bytes, padding]);
+    let encrypted = concatUint8([len, bytes, padding]);
     if (this.obfuscated) {
-      encrypted = encryptAES_CTR(
-        encrypted,
-        this.obfParams.encryptKey,
-        this.obfParams.encryptIV
-      );
+      encrypted = this.obfParams.encryptor.encrypt(encrypted);
     }
-    const uint8 = concatUint8([header, len, encrypted]);
+    const uint8 = concatUint8([header, encrypted]);
 
+    console.log('===> Sending bytes: ', bytesToHex(uint8));
     return uint8;
   }
 
   unpackMessage(data) {
     let uint8 = new Uint8Array(data);
+    console.log('<=== Recieved bytes: ', bytesToHex(uint8));
     if (this.obfuscated) {
-      uint8 = decryptAES_CTR(
-        uint8,
-        this.obfParams.encryptKey,
-        this.obfParams.encryptIV
-      );
+      uint8 = this.obfParams.decryptor.decrypt(uint8);
     }
 
     const len = bytesToInt(uint8.slice(0, 4));
@@ -80,7 +74,6 @@ class IntermediatePadded {
       console.log(`Data is corrupt: proclaimed length is ${len}, actual: ${data.length} `);
       return;
     }
-    console.log('<=== Recieved message: ', bytesToHex(msg));
 
     return msg;
   }
@@ -122,7 +115,10 @@ const makeObfuscationParams = (protocolHeader) => {
   let decryptKey = initRev.slice(8, 40);
   const decryptIV = initRev.slice(40, 56);
 
-  const encryptedInit = encryptAES_CTR(init, encryptKey, encryptIV);
+  const encryptor = makeEncryptorAES_CTR(encryptKey, encryptIV);
+  const decryptor = makeDecryptorAES_CTR(decryptKey, decryptIV);
+
+  const encryptedInit = encryptor.encrypt(init);
 
   const finalInit = concatUint8([
     init.slice(0, 56),
@@ -134,7 +130,9 @@ const makeObfuscationParams = (protocolHeader) => {
     encryptKey,
     encryptIV,
     decryptKey,
-    decryptIV
+    decryptIV,
+    encryptor,
+    decryptor
   };
 };
 
