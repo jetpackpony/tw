@@ -17,7 +17,7 @@ class IntermediatePadded {
   initialByteSent = false;
   obfuscated = false;
   obfParams = {};
-  protocolHeader = 0xdddddddd;
+  protocolHeader = 0xeeeeeeee;
   getRandomBytes = false;
 
   constructor(obfuscated = false, testing) {
@@ -47,7 +47,8 @@ class IntermediatePadded {
     }
     
     // Generate 0-15 random bytes
-    const padding = this.getRandomBytes();
+    //const padding = this.getRandomBytes();
+    const padding = [];
     const len = intToBytes(bytes.length + padding.length);
 
     let encrypted = concatUint8([len, bytes, padding]);
