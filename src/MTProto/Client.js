@@ -1,5 +1,5 @@
-const fs = require('fs');
-const authResult = require('../authResult.json');
+import { setItem, getItem } from '../storage';
+
 const { MessageBuilder } = require('../MessageBuilder');
 const {
   hexToBytes,
@@ -23,6 +23,7 @@ class Client {
     this.apiId = apiId;
     this.apiHash = apiHash;
     this.sendMsg = sendMsg;
+    const authResult = JSON.parse(getItem("authResult"));
     this.authResult = Object.keys(authResult).reduce((acc, k) => {
       acc[k] = Uint8Array.from(Object.values(authResult[k]));
       return acc;
@@ -69,9 +70,8 @@ class Client {
         if (c === "9ec20908") {
           this.authResult.sessionId = this.sessionId;
           this.authResult.salt = m.body.slice(20, 28)
-          fs.writeFileSync('./src/authResult.json', JSON.stringify(this.authResult, null, 2));
+          setItem('authResult', JSON.stringify(this.authResult, null, 2));
           this.messagesToAcknowledge.push(m.msg_id.slice(0).reverse());
-
         }
         // pong
         if (c === "347773c5") {
