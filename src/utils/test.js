@@ -18,7 +18,7 @@ describe('utils', function () {
   describe('makeMsgIdHex', function () {
     it('should make correct hex', async () => {
       const date = 1573741498;
-      const output = "5DCD63BA00000000";
+      const output = "5dcd63ba00000000";
       const res = await makeMsgIdHex(date);
       expect(res).to.eql(output);
     });

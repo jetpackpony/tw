@@ -1,3 +1,4 @@
+const bigInt = require('big-integer');
 const randomBytes = require('randombytes');
 const { sha1, sha256 } = require('crypto-hash');
 const aesjs = require('aes-js');
@@ -7,7 +8,6 @@ const {
   bytesToHex,
   bytesFromHex
 } = require('../primeFactorization');
-const BI = require('leemon');
 const AES_IGE = require('./aes_ige');
 
 const bytesToSHA1 = async (bytes, returnHex = false) => {
@@ -34,19 +34,19 @@ const makeAuthKey = (g_a, b, p) => {
 };
 
 const modPow = async (baseNum, exponent, modulus) => {
-  const xBigInt = BI.str2bigInt(bytesToHex(baseNum), 16);
-  const yBigInt = BI.str2bigInt(bytesToHex(exponent), 16);
-  const mBigInt = BI.str2bigInt(bytesToHex(modulus), 16);
-  const resBigInt = BI.powMod(xBigInt, yBigInt, mBigInt);
-  const BIb = bytesFromHex(BI.bigInt2str(resBigInt, 16));
-  return BIb;
+  const base = bigInt(bytesToHex(baseNum), 16);
+  const exp = bigInt(bytesToHex(exponent), 16);
+  const mod = bigInt(bytesToHex(modulus), 16);
+  const res = base.modPow(exp, mod);
+  const bytes = bytesFromHex(res.toString(16));
+  return bytes;
 
-  // const bigB = new forge.jsbn.BigInteger(baseNum.slice(0).reverse());
-  // const bigE = new forge.jsbn.BigInteger(exponent.slice(0).reverse());
-  // const bigM = new forge.jsbn.BigInteger(modulus.slice(0).reverse());
-  // const res = bigB.modPow(bigE, bigM);
-  // const bytes = bytesFromHex(res.toString(16));
-  // return bytes;
+  // const xBigInt = BI.str2bigInt(bytesToHex(baseNum), 16);
+  // const yBigInt = BI.str2bigInt(bytesToHex(exponent), 16);
+  // const mBigInt = BI.str2bigInt(bytesToHex(modulus), 16);
+  // const resBigInt = BI.powMod(xBigInt, yBigInt, mBigInt);
+  // const BIb = bytesFromHex(BI.bigInt2str(resBigInt, 16));
+  // return BIb;
 };
 
 const decryptAES = async (bytes, key, iv) => {
