@@ -1,20 +1,22 @@
 const { concatUint8, intToBytes, bytesToInt } = require('../utils');
-const randomBytes = require('randombytes');
 const { bytesToHex, bytesFromHex } = require("../primeFactorization");
 const {
   makeEncryptorAES_CTR,
-  makeDecryptorAES_CTR
+  makeDecryptorAES_CTR,
+  getRandomBytes
 } = require('../crypto');
 
 const protocolHeader = 0xeeeeeeee;
 const IntermediatePadded = async (obfuscated = false, testing) => {
   let initialByteSent = false;
   let obfParams = {};
-  let getRandomBytes = () => {
-    return randomBytes(Math.round(Math.random() * 15));
+  let makeRandomByteString = async () => {
+    return await getRandomBytes(Math.round(Math.random() * 15));
   };
+  if (testing) {
+    makeRandomByteString = testing.getRandomBytes;
+  }
 
-  getRandomBytes = (testing) ? testing.getRandomBytes : getRandomBytes;
   if (obfuscated) {
     obfParams =
       (testing)
@@ -34,7 +36,7 @@ const IntermediatePadded = async (obfuscated = false, testing) => {
     }
     
     // Generate 0-15 random bytes
-    //const padding = getRandomBytes();
+    // const padding = await makeRandomByteString();
     const padding = [];
     const len = intToBytes(bytes.length + padding.length);
 
@@ -80,9 +82,9 @@ const makeObfuscationParams = async (protocolHeader) => {
   let init;
   while(true) {
     init = concatUint8([
-      Uint8Array.from(randomBytes(56)),
+      Uint8Array.from(await getRandomBytes(56)),
       intToBytes(protocolHeader),
-      Uint8Array.from(randomBytes(4))
+      Uint8Array.from(await getRandomBytes(4))
     ]);
 
     if (init[0] === 0xef) {

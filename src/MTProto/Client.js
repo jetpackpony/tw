@@ -1,6 +1,5 @@
 const fs = require('fs');
 const BI = require('leemon');
-const randomBytes = require('randombytes');
 const authResult = require('../authResult.json');
 const { MessageBuilder } = require('../MessageBuilder');
 const {
@@ -9,7 +8,7 @@ const {
   getEncryptionParams,
   bytesToInt
 } = require('../utils');
-const { encryptAES, decryptAES } = require('../crypto');
+const { encryptAES, decryptAES, getRandomBytes } = require('../crypto');
 const { bytesToHex, bytesFromHex } = require("../primeFactorization");
 
 // Client will store all messages and
@@ -24,7 +23,6 @@ class Client {
       acc[k] = Uint8Array.from(Object.values(authResult[k]));
       return acc;
     }, {});
-    this.sessionId = this.authResult.sessionId || new Uint8Array(randomBytes(8));
   }
 
   subToResponse(msgId, resolve, reject) {
@@ -123,6 +121,9 @@ class Client {
   }
 
   async send(method, params) {
+    if (!this.sessionId) {
+      this.sessionId = this.authResult.sessionId || new Uint8Array(await getRandomBytes(8));
+    }
     switch(method) {
       case "auth.sendCode":
         return this.sendCode(params);
@@ -180,7 +181,7 @@ class Client {
     msg.addValueToMsg(plainBytes);
 
     // padding
-    msg.padMessageToLengthDevidedBy(16, true, null, 12);
+    await msg.padMessageToLengthDevidedBy(16, true, null, 12);
 
     const bodyBytes = msg.getBytes();
     const { msg_key, aes_key, aes_iv } = await getEncryptionParams({
@@ -233,7 +234,7 @@ class Client {
     msg.addValueToMsg(plainBytes);
 
     // padding
-    msg.padMessageToLengthDevidedBy(16, true, null, 12);
+    await msg.padMessageToLengthDevidedBy(16, true, null, 12);
 
     const bodyBytes = msg.getBytes();
     const { msg_key, aes_key, aes_iv } = await getEncryptionParams({

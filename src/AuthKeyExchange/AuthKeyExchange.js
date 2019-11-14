@@ -6,9 +6,16 @@ const {
 } = require('../primeFactorization');
 const pow2to32 = BI.str2bigInt("4294967296", 10, 1);
 const { MessageBuilder } = require('../MessageBuilder');
-const randomBytes = require('randombytes');
 const publicKeys = require('../publicKeys.json');
-const { bytesToSHA1, TL_RSA, decryptAES, encryptAES, makeG_B, makeAuthKey } = require("../crypto");
+const {
+  bytesToSHA1,
+  TL_RSA,
+  decryptAES,
+  encryptAES,
+  makeG_B,
+  makeAuthKey,
+  getRandomBytes
+} = require("../crypto");
 const { makeTmpAESKeys, xorArrays } = require("../utils");
 
 
@@ -238,7 +245,7 @@ class AuthKeyExchange {
     builder.addValueToMsg(0xbe7e8ef1, 4, true);
 
     // nonce
-    this.nonce = this.nonce || new Uint8Array(randomBytes(16));
+    this.nonce = this.nonce || new Uint8Array(await getRandomBytes(16));
     console.log("===> nonce generated: ", bytesToHex(this.nonce));
     builder.addValueToMsg(this.nonce);
 
@@ -285,7 +292,7 @@ class AuthKeyExchange {
   }
 
   async setClientDHParamsMsg(lastMsg) {
-    this.b = this.b || new Uint8Array(randomBytes(256));
+    this.b = this.b || new Uint8Array(await getRandomBytes(256));
     console.log("===> B generated: ", bytesToHex(this.b))
     const g_b = await makeG_B(lastMsg.data.g, this.b, lastMsg.data.dh_prime);
     const innerData = this.buildClientDHInnerData(lastMsg.data.server_nonce, g_b);
@@ -318,7 +325,7 @@ class AuthKeyExchange {
     const dataBuilder = new MessageBuilder();
     dataBuilder.addValueToMsg(await bytesToSHA1(innerData));
     dataBuilder.addValueToMsg(innerData);
-    dataBuilder.padMessageToLengthDevidedBy(16, true);
+    await dataBuilder.padMessageToLengthDevidedBy(16, true);
     return dataBuilder.getBytes();
   }
 
@@ -356,7 +363,7 @@ class AuthKeyExchange {
     const pq = pqPrimeFactorization(lastMsg.data.pq.slice(1, 9));
 
     // generate new_nonce
-    this.newNonce = this.newNonce || new Uint8Array(randomBytes(32));
+    this.newNonce = this.newNonce || new Uint8Array(await getRandomBytes(32));
     console.log("===> newNonce generated: ", bytesToHex(this.newNonce));
 
     // generate p_q_inner_data
@@ -383,7 +390,7 @@ class AuthKeyExchange {
     dataBuilder.addValueToMsg(0); // this is a leading zero byte so that fucking RSA works omg jesus christ documentation sucks balls
     dataBuilder.addValueToMsg(await bytesToSHA1(innerData));
     dataBuilder.addValueToMsg(innerData);
-    dataBuilder.padMessageToLength(256, true);
+    await dataBuilder.padMessageToLength(256, true);
     return dataBuilder.getBytes();
   }
 

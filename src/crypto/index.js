@@ -1,3 +1,4 @@
+const randomBytes = require('randombytes');
 const { sha1, sha256 } = require('crypto-hash');
 const aesjs = require('aes-js');
 const forge = require('node-forge');
@@ -90,6 +91,10 @@ const makeDecryptorAES_CTR = async (key, iv) => {
   };
 };
 
+const getRandomBytes = async (number) => {
+  return randomBytes(number);
+};
+
 module.exports = {
   bytesToSHA1,
   bytesToSHA256,
@@ -102,5 +107,6 @@ module.exports = {
   makeAuthKey,
   makeEncryptorAES_CTR,
   makeDecryptorAES_CTR,
-  modPow
+  modPow,
+  getRandomBytes
 };

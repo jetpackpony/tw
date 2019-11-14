@@ -1,4 +1,3 @@
-const randomBytes = require('randombytes');
 const expect = require('chai').expect;
 const { makeTmpAESKeys } = require("./index");
 const { bytesToHex, bytesFromHex } = require('../primeFactorization');

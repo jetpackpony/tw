@@ -1,5 +1,5 @@
 const { bytesFromHex } = require('../primeFactorization');
-const randomBytes = require('randombytes');
+const { getRandomBytes } = require('../crypto');
 
 function numToBytes (num, length, littleEndian = false) {
     const arr = new ArrayBuffer(length);
@@ -53,20 +53,20 @@ class MessageBuilder {
     return new Uint8Array(this.msg);
   }
 
-  padMessageToLength(len, rand = false, val = 0) {
+  async padMessageToLength(len, rand = false, val = 0) {
     const lenDiff = len - this.msg.length;
     if (lenDiff <= 0) return;
 
     const padding = 
       (rand)
-        ? new Uint8Array(randomBytes(lenDiff))
+        ? new Uint8Array(await getRandomBytes(lenDiff))
         : (new Uint8Array(lenDiff)).fill(val);
     
     this.addValueToMsg(padding);
     return padding;
   }
 
-  padMessageToLengthDevidedBy(len, rand = false, val = 0, minBytes = 0, maxBytes) {
+  async padMessageToLengthDevidedBy(len, rand = false, val = 0, minBytes = 0, maxBytes) {
     let lenDiff = len - this.msg.length % len;
     if (lenDiff <= 0 || lenDiff >= len) return;
 
@@ -76,7 +76,7 @@ class MessageBuilder {
 
     const padding = 
       (rand)
-        ? new Uint8Array(randomBytes(lenDiff))
+        ? new Uint8Array(await getRandomBytes(lenDiff))
         : (new Uint8Array(lenDiff)).fill(val);
     
     this.addValueToMsg(padding);
