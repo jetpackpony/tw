@@ -18,11 +18,10 @@ const bytesToSHA256 = async (bytes, returnHex = false) => {
   return new Uint8Array(await sha256(bytes, { outputFormat: "buffer" }));
 };
 
-const TL_RSA = async (data, keyStr) => {
-  const bigData = new forge.jsbn.BigInteger(data);
-  const publicKey = forge.pki.publicKeyFromPem(keyStr);
-  const enc = bigData.modPow(publicKey.e, publicKey.n);
-  const bytes = bytesFromHex(enc.toString(16));
+const TL_RSA = async (data, key) => {
+  const exp = bytesFromHex(key.exp);
+  const mod = bytesFromHex(key.mod);
+  const bytes = new Uint8Array(await modPow(data, exp, mod));
   return bytes;
 };
 

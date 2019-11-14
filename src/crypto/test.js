@@ -8,7 +8,8 @@ const {
   encryptAES,
   decryptAES,
   bytesToSHA1,
-  bytesToSHA256
+  bytesToSHA256,
+  TL_RSA
 } = require('../crypto');
 
 describe("crypto", () => {
@@ -138,6 +139,28 @@ describe("crypto", () => {
       const input = new Uint8Array(bytesFromHex("206f76657220746865206c617a7920646f672e"));
       const output = new Uint8Array(bytesFromHex("24b757ce9a2a426f89c216c95f99c63efbb3382dcbbbd451c1b793eeda93a63d"));
       const res = await bytesToSHA256(input);
+      expect(res).to.eql(output);
+    });
+  });
+
+  describe.only("TL_RSA", () => {
+    //const key = "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEAwVACPi9w23mF3tBkdZz+zwrzKOaaQdr01vAbU4E1pvkfj4sqDsm6\nlyDONS789sVoD/xCS9Y0hkkC3gtL1tSfTlgCMOOul9lcixlEKzwKENj1Yz/s7daS\nan9tqw3bfUV/nqgbhGX81v/+7RFAEd+RwFnK7a+XYl9sluzHRyVVaTTveB2GazTw\nEfzk2DWgkBluml8OREmvfraX3bkHZJTKX4EQSjBbbdJ2ZXIsRrYOXfaA+xayEGB+\n8hdlLmAjbCVfaigxX0CDqWeR1yFL9kwd9P0NsZRPsmoqVwMbMu7mStFai6aIhc3n\nSlv8kg9qv1m6XHVQY3PnEw+QQtqSIXklHwIDAQAB\n-----END RSA PUBLIC KEY-----";
+    const key = {
+      "mod": "c150023e2f70db7985ded064759cfecf0af328e69a41daf4d6f01b538135a6f91f8f8b2a0ec9ba9720ce352efcf6c5680ffc424bd634864902de0b4bd6d49f4e580230e3ae97d95c8b19442b3c0a10d8f5633fecedd6926a7f6dab0ddb7d457f9ea81b8465fcd6fffeed114011df91c059caedaf97625f6c96ecc74725556934ef781d866b34f011fce4d835a090196e9a5f0e4449af7eb697ddb9076494ca5f81104a305b6dd27665722c46b60e5df680fb16b210607ef217652e60236c255f6a28315f4083a96791d7214bf64c1df4fd0db1944fb26a2a57031b32eee64ad15a8ba68885cde74a5bfc920f6abf59ba5c75506373e7130f9042da922179251f",
+      "exp": "10001"
+    };
+    it("calculates correctly", async () => {
+      const input = new Uint8Array(bytesFromHex("54686520717569636b2062726f776e20666f78206a756d7073"));
+      const output = new Uint8Array(bytesFromHex("8c35b0be14d078c14b84d25e7bed0d880fecc0450f899e24cc6fe8ccce04a957ac434dbcbc1680de4601ad5bda2a6f89272fe2b1a020c9bb21ea0c3b0f3b9d5bea259105f004ab8489c412e44a1e1d4e3c2a5d6b2011a362607208a45782ff70c57b338c9e90a9557fa7fb86568067afda247329c66ef698d23044f1d0a9a28e0fcb3ec5060b841f1ff3cf5a3168cbdeb5fda26e4c6b8ca6e1f8dff9ee4763de717dd5108085fe620172cb1929f407e8f4adfb2e1c84313d21172a44e0261e6bd9dbb861420497609510b288f1df438cc7abe5fe444bd5e33ab66804bea8468994dbe03dece783774e6589eea3f8a8aadd0af829ceb351ef796bfebe5fd83522"));
+      const res = await TL_RSA(input, key);
+      const b = bytesToHex(res);
+      expect(res).to.eql(output);
+    });
+    it("calculates correctly", async () => {
+      const input = new Uint8Array(bytesFromHex("206f76657220746865206c617a7920646f672e"));
+      const output = new Uint8Array(bytesFromHex("807b0cd65909b28df5858c3e2e4f20885fd386791cc3b990d557bbf339c4f58a000263e5b1622c7eaf9a9dbc044470973039166f8889fec65fa2c4af3ccbfbdd8b0ee3cfc3112f670352568a14c4b220b290700168b04c82692901df3cccd20e293f4344d229e1b4976425cde86090fcbe1e4e2861b3d9a56b5c5a3602ffdd3d83b0451788cf3241361228bd49a5bfe83957b0c5214df4af23d6f281179753ee0de2f0fff9368fd2f3f18dff2954b6db281ef3f3e87ee58f4b6d22d3ca8da2fa923cde9025d769832d27c6cdd216c532696b8c148501ddfbecc5e37984eed865156e30e7de2be3c0e87fa5827924b1ad28dbd747dab789c04b195464c3ab2184"));
+      const res = await TL_RSA(input, key);
+      const b = bytesToHex(res);
       expect(res).to.eql(output);
     });
   });

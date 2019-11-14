@@ -38,7 +38,7 @@ const keyMap = keys.reduce((acc, k) => {
   const hex = md.digest().toHex();
 
   const fingerprint = hex.slice(hex.length - 16, hex.length)
-  acc[fingerprint] = k;
+  acc[fingerprint] = { mod: n, exp: e };
   return acc;
 }, {})
 
