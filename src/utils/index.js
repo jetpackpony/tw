@@ -1,7 +1,5 @@
 const BI = require('leemon');
 const { bytesToSHA1, bytesToSHA256 } = require("../crypto");
-const pow2to32 = BI.str2bigInt("4294967296", 10, 1);
-
 const makeTmpAESKeys = async (newNonce, serverNonce) => {
   const newNoncePlusServer = await bytesToSHA1(concatUint8([newNonce, serverNonce]));
   const serverPlusNewNonce = await bytesToSHA1(concatUint8([serverNonce, newNonce]));
@@ -74,8 +72,10 @@ const unserializeString = (bytes) => {
   return content;
 };
 
-const makeMsgIdHex = () => {
-  const unixTime = BI.int2bigInt(Math.floor(new Date() / 1000), 32, 1);
+const pow2to32 = BI.str2bigInt("4294967296", 10, 1);
+const makeMsgIdHex = async (date = false) => {
+  if (!date) date = Math.floor(new Date() / 1000);
+  const unixTime = BI.int2bigInt(date, 32, 1);
   const msg_id = BI.mult(unixTime, pow2to32);
   return BI.bigInt2str(msg_id, 16);
 };

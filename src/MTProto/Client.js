@@ -1,5 +1,4 @@
 const fs = require('fs');
-const BI = require('leemon');
 const authResult = require('../authResult.json');
 const { MessageBuilder } = require('../MessageBuilder');
 const {
@@ -169,7 +168,7 @@ class Client {
     msg.addValueToMsg(this.sessionId);
 
     // Msg Id
-    msg.addStrToMsg(makeMsgIdHex(), true);
+    msg.addStrToMsg(await makeMsgIdHex(), true);
 
     // seq no
     msg.addValueToMsg(1, 4, true);
@@ -221,7 +220,7 @@ class Client {
     msg.addValueToMsg(this.sessionId);
 
     // Msg Id
-    const msgId = makeMsgIdHex();
+    const msgId = await makeMsgIdHex();
     msg.addStrToMsg(msgId, true);
 
     // seq no

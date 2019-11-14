@@ -1,10 +1,8 @@
-const BI = require('leemon');
 const {
   pqPrimeFactorization,
   bytesToHex,
   bytesFromHex
 } = require('../primeFactorization');
-const pow2to32 = BI.str2bigInt("4294967296", 10, 1);
 const { MessageBuilder } = require('../MessageBuilder');
 const publicKeys = require('../publicKeys.json');
 const {
@@ -16,7 +14,7 @@ const {
   makeAuthKey,
   getRandomBytes
 } = require("../crypto");
-const { makeTmpAESKeys, xorArrays } = require("../utils");
+const { makeTmpAESKeys, xorArrays, makeMsgIdHex } = require("../utils");
 
 
 const decryptDHAnswer = async (encAnswer, key, iv) => {
@@ -230,9 +228,7 @@ class AuthKeyExchange {
 
     // message_id
     if (!this.msg_id_hex) {
-      const unixTime = BI.int2bigInt(Math.floor(new Date() / 1000), 32, 1);
-      const msg_id = BI.mult(unixTime, pow2to32);
-      this.msg_id_hex = BI.bigInt2str(msg_id, 16);
+      this.msg_id_hex = await makeMsgIdHex();
     }
     console.log("msg_id_hex", this.msg_id_hex);
     builder.addStrToMsg(this.msg_id_hex, true);
@@ -298,7 +294,7 @@ class AuthKeyExchange {
     const innerData = this.buildClientDHInnerData(lastMsg.data.server_nonce, g_b);
     const dataWithHash = await this.buildClientDHInnerDataWithHash(innerData);
     const encrypted = await encryptAES(dataWithHash, this.tmp_aes_key, this.tmp_aes_iv);
-    const msg = this.buildSetClientDHParams(lastMsg.data.server_nonce, encrypted);
+    const msg = await this.buildSetClientDHParams(lastMsg.data.server_nonce, encrypted);
     return msg;
   }
 
@@ -329,7 +325,7 @@ class AuthKeyExchange {
     return dataBuilder.getBytes();
   }
 
-  buildSetClientDHParams(serverNonce, encryptedData) {
+  async buildSetClientDHParams(serverNonce, encryptedData) {
     const builder = new MessageBuilder();
 
     // auth_key_id
@@ -337,9 +333,7 @@ class AuthKeyExchange {
 
     // message_id
     if (!this.msg_id_hex) {
-      const unixTime = BI.int2bigInt(Math.floor(new Date() / 1000), 32, 1);
-      const msg_id = BI.mult(unixTime, pow2to32);
-      this.msg_id_hex = BI.bigInt2str(msg_id, 16);
+      this.msg_id_hex = await makeMsgIdHex();
     }
     builder.addStrToMsg(this.msg_id_hex, true);
 
@@ -382,7 +376,7 @@ class AuthKeyExchange {
     // encrypt data_with_hash
     const encData = await TL_RSA(dataWithHash, key);
 
-    return this.buildReqDHParams(lastMsg.data.server_nonce, pq[0], pq[1], fingerPrint, encData);
+    return await this.buildReqDHParams(lastMsg.data.server_nonce, pq[0], pq[1], fingerPrint, encData);
   }
 
   async buildDataWithHash(innerData) {
@@ -394,7 +388,7 @@ class AuthKeyExchange {
     return dataBuilder.getBytes();
   }
 
-  buildReqDHParams(serverNonce, p, q, fingerPrint, encData) {
+  async buildReqDHParams(serverNonce, p, q, fingerPrint, encData) {
     const builder = new MessageBuilder();
 
     // auth_key_id
@@ -402,9 +396,7 @@ class AuthKeyExchange {
 
     // message_id
     if (!this.msg_id_hex) {
-      const unixTime = BI.int2bigInt(Math.floor(new Date() / 1000), 32, 1);
-      const msg_id = BI.mult(unixTime, pow2to32);
-      this.msg_id_hex = BI.bigInt2str(msg_id, 16);
+      this.msg_id_hex = await makeMsgIdHex();
     }
     builder.addStrToMsg(this.msg_id_hex, true);
 
