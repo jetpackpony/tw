@@ -1,5 +1,5 @@
 const bigInt = require('big-integer');
-const { pqPrimeFactorization } = require("../primeFactorization");
+const { factorize } = require("./primeFactorization");
 
 const concatUint8 = (listOfArrays) => {
   const len = listOfArrays.reduce((sum, arr) => {
@@ -91,7 +91,9 @@ const intToBytes = (num, size = 4, littleEndian = true) => {
 };
 
 const primeFactorization = async (bytes) => {
-  return pqPrimeFactorization(bytes);
+  const n = bigInt(bytesToHex(bytes), 16);
+  const res = factorize(n);
+  return res.map((v) => hexToBytes(v.toString(16)));
 };
 
 const bytesToHex = (bytes = []) => {
