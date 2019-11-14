@@ -6,12 +6,14 @@
   "scripts": {
     "test": "mocha src/**/test.js",
     "prepare-public-keys": "node scripts/preparePublicKeys.js",
-    "start": "node src/index.js"
+    "start": "parcel src/index.html",
+    "build": "parcel build src/index.html"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@babel/runtime": "^7.7.2",
     "aes-js": "^3.1.2",
     "big-integer": "^1.6.48",
     "crypto-hash": "^1.2.2",
@@ -19,6 +21,8 @@
     "randombytes": "^2.1.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.7.2",
+    "@babel/plugin-transform-runtime": "^7.6.2",
     "chai": "^4.2.0",
     "mocha": "^6.2.2"
   }
