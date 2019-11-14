@@ -58,7 +58,7 @@
         "--colors",
         "${workspaceFolder}/src/**/test.js"
       ],
-      "console": "integratedTerminal",
+      "console": "internalConsole",
       "internalConsoleOptions": "neverOpen"
     },
     {
