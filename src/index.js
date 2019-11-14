@@ -8,31 +8,40 @@ const AuthKeyExchange = require('./AuthKeyExchange/AuthKeyExchange');
 const HOST = '149.154.167.40';
 const PORT = '443';
 
-const transport = new IntermediatePadded(true);
-const exchange = new AuthKeyExchange({});
-const msg = exchange.makeNextMessage();
-const packet = transport.packMessage(msg);
+const start = async () => {
+  const transport = await IntermediatePadded(true);
+  const exchange = new AuthKeyExchange({});
+  const msg = await exchange.makeNextMessage();
+  const packet = await transport.packMessage(msg);
 
-const client = new net.Socket();
-client.connect(PORT, HOST, function () {
-  client.write(packet);
-});
+  const client = new net.Socket();
+  client.connect(PORT, HOST, function () {
+    client.write(packet);
+  });
 
-client.on('data', function (data) {
-  const msg = transport.unpackMessage(data);
+  client.on('data', async (data) => {
+    try {
+      const msg = await transport.unpackMessage(data);
 
-  exchange.processMessage(msg);
-  if (!exchange.isComplete) {
-    const m = exchange.makeNextMessage();
-    const nextMessage = transport.packMessage(m);
-    client.write(nextMessage);
-  } else {
-    const authResult = exchange.completeAuth();
-    fs.writeFileSync('./src/authResult.json', JSON.stringify(authResult, null, 2));
-    client.destroy();
-  }
-});
+      await exchange.processMessage(msg);
+      if (!exchange.isComplete) {
+        const m = await exchange.makeNextMessage();
+        const nextMessage = await transport.packMessage(m);
+        client.write(nextMessage);
+      } else {
+        const authResult = await exchange.completeAuth();
+        fs.writeFileSync('./src/authResult.json', JSON.stringify(authResult, null, 2));
+        client.destroy();
+      }
+    } catch(e) {
+      console.log("some error: ", e);
+    }
+  });
 
-client.on('close', function () {
-  console.log('Connection closed');
-});
+  client.on('close', function () {
+    console.log('Connection closed');
+  });
+
+};
+
+start();

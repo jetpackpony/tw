@@ -12,16 +12,16 @@ const { bytesToSHA1, TL_RSA, decryptAES, encryptAES, makeG_B, makeAuthKey } = re
 const { makeTmpAESKeys, xorArrays } = require("../utils");
 
 
-const decryptDHAnswer = (encAnswer, key, iv) => {
+const decryptDHAnswer = async (encAnswer, key, iv) => {
   // decrypt
-  const decrypted = decryptAES(encAnswer, key, iv);
+  const decrypted = await decryptAES(encAnswer, key, iv);
 
   // extract sha1 and padding
   const sha = decrypted.slice(0, 20);
   const msg = decrypted.slice(20, 584);
 
   // check against sha1
-  const calcSHA = bytesToSHA1(msg);
+  const calcSHA = await bytesToSHA1(msg);
   if (bytesToHex(calcSHA) !== bytesToHex(sha)) {
     throw ("decrypted DH answer didn't pass SHA test");
   }
@@ -108,7 +108,7 @@ class AuthKeyExchange {
     }
   }
 
-  parseUnencryptedMessage(msg) {
+  async parseUnencryptedMessage(msg) {
     const res = {
       auth_key_id: msg.slice(0, 8).reverse(),
       id: msg.slice(8, 16).reverse(),
@@ -120,11 +120,11 @@ class AuthKeyExchange {
     switch (res.type) {
       // resPQ
       case "05162463":
-        res.data = this.parseResPQ(res.data);
+        res.data = await this.parseResPQ(res.data);
         return res;
       // server_DH_params_ok
       case "d0e8075c":
-        res.data = this.parseServerDHParams(res.data);
+        res.data = await this.parseServerDHParams(res.data);
         return res;
       // server_DH_params_fail
       case "79cb045d":
@@ -132,7 +132,7 @@ class AuthKeyExchange {
         return;
       // dh_gen_ok
       case "3bcbf734":
-        res.data = this.parseDHGenOK(res.data);
+        res.data = await this.parseDHGenOK(res.data);
         this.isComplete = true;
         return res;
       default:
@@ -164,15 +164,15 @@ class AuthKeyExchange {
     return res;
   }
 
-  parseServerDHParams(msg) {
+  async parseServerDHParams(msg) {
     const res = {
       nonce: msg.slice(0, 16),
       server_nonce: msg.slice(16, 32),
       encrypted_answer: unserializeString(msg.slice(32))
     };
     // generate tmp keys
-    const [key, iv] = makeTmpAESKeys(this.newNonce, res.server_nonce);
-    const answer = decryptDHAnswer(res.encrypted_answer, key, iv);
+    const [key, iv] = await makeTmpAESKeys(this.newNonce, res.server_nonce);
+    const answer = await decryptDHAnswer(res.encrypted_answer, key, iv);
     this.tmp_aes_key = key;
     this.tmp_aes_iv = iv;
 
@@ -199,14 +199,14 @@ class AuthKeyExchange {
     return res;
   }
 
-  completeAuth() {
+  async completeAuth() {
     console.log();
     const paramsMsg = this.incomingMsgs[this.incomingMsgs.length - 2];
     const g_a = paramsMsg.data.g_a;
     const dh_prime = paramsMsg.data.dh_prime;
-    const authKey = Uint8Array.from(makeAuthKey(g_a, this.b, dh_prime));
+    const authKey = Uint8Array.from(await makeAuthKey(g_a, this.b, dh_prime));
     const salt = xorArrays(this.newNonce.slice(0, 8), paramsMsg.data.server_nonce.slice(0, 8));
-    const auth_key_id = Uint8Array.from(bytesToSHA1(authKey).slice(-8));
+    const auth_key_id = Uint8Array.from((await bytesToSHA1(authKey)).slice(-8));
     return {
       authKey,
       serverTime: paramsMsg.data.server_time,
@@ -215,7 +215,7 @@ class AuthKeyExchange {
     };
   }
 
-  makeInitialMessage() {
+  async makeInitialMessage() {
     const builder = new MessageBuilder();
 
     // auth_key_id
@@ -245,8 +245,8 @@ class AuthKeyExchange {
     return builder.getBytes();
   }
 
-  processMessage(msg) {
-    const parsed = this.parseUnencryptedMessage(msg);
+  async processMessage(msg) {
+    const parsed = await this.parseUnencryptedMessage(msg);
 
     ///////////
     // should check the message here
@@ -254,9 +254,9 @@ class AuthKeyExchange {
     this.incomingMsgs.push(parsed);
   }
 
-  makeNextMessage() {
+  async makeNextMessage() {
     if (this.outgoingMsgs.length === 0) {
-      const msg = this.makeInitialMessage();
+      const msg = await this.makeInitialMessage();
       this.outgoingMsgs.push(msg);
       return msg;
     }
@@ -265,17 +265,17 @@ class AuthKeyExchange {
     switch (lastMsg.type) {
       // resPQ
       case "05162463":
-        const msg = this.makeReqDHParamsMsg(lastMsg);
+        const msg = await this.makeReqDHParamsMsg(lastMsg);
         this.outgoingMsgs.push(msg);
         return msg;
       // server_DH_params_ok
       case "d0e8075c":
         this.checkDHParams(lastMsg);
-        const dhMsg = this.setClientDHParamsMsg(lastMsg);
+        const dhMsg = await this.setClientDHParamsMsg(lastMsg);
         this.outgoingMsgs.push(dhMsg);
         return dhMsg;
       default:
-        console.log(`Message type was: ${res.type}. Couldn't build next request`);
+        throw(`Message type was: ${lastMsg.type}. Couldn't build next request`);
     }
   }
 
@@ -284,13 +284,13 @@ class AuthKeyExchange {
 
   }
 
-  setClientDHParamsMsg(lastMsg) {
+  async setClientDHParamsMsg(lastMsg) {
     this.b = this.b || new Uint8Array(randomBytes(256));
     console.log("===> B generated: ", bytesToHex(this.b))
-    const g_b = makeG_B(lastMsg.data.g, this.b, lastMsg.data.dh_prime);
+    const g_b = await makeG_B(lastMsg.data.g, this.b, lastMsg.data.dh_prime);
     const innerData = this.buildClientDHInnerData(lastMsg.data.server_nonce, g_b);
-    const dataWithHash = this.buildClientDHInnerDataWithHash(innerData);
-    const encrypted = encryptAES(dataWithHash, this.tmp_aes_key, this.tmp_aes_iv);
+    const dataWithHash = await this.buildClientDHInnerDataWithHash(innerData);
+    const encrypted = await encryptAES(dataWithHash, this.tmp_aes_key, this.tmp_aes_iv);
     const msg = this.buildSetClientDHParams(lastMsg.data.server_nonce, encrypted);
     return msg;
   }
@@ -314,9 +314,9 @@ class AuthKeyExchange {
     return builder.getBytes();
   }
 
-  buildClientDHInnerDataWithHash(innerData) {
+  async buildClientDHInnerDataWithHash(innerData) {
     const dataBuilder = new MessageBuilder();
-    dataBuilder.addValueToMsg(bytesToSHA1(innerData));
+    dataBuilder.addValueToMsg(await bytesToSHA1(innerData));
     dataBuilder.addValueToMsg(innerData);
     dataBuilder.padMessageToLengthDevidedBy(16, true);
     return dataBuilder.getBytes();
@@ -352,7 +352,7 @@ class AuthKeyExchange {
     return builder.getBytes();
   }
 
-  makeReqDHParamsMsg(lastMsg) {
+  async makeReqDHParamsMsg(lastMsg) {
     const pq = pqPrimeFactorization(lastMsg.data.pq.slice(1, 9));
 
     // generate new_nonce
@@ -370,18 +370,18 @@ class AuthKeyExchange {
     }
 
     // build data_with_hash
-    const dataWithHash = this.buildDataWithHash(innerData);
+    const dataWithHash = await this.buildDataWithHash(innerData);
 
     // encrypt data_with_hash
-    const encData = TL_RSA(dataWithHash, key);
+    const encData = await TL_RSA(dataWithHash, key);
 
     return this.buildReqDHParams(lastMsg.data.server_nonce, pq[0], pq[1], fingerPrint, encData);
   }
 
-  buildDataWithHash(innerData) {
+  async buildDataWithHash(innerData) {
     const dataBuilder = new MessageBuilder();
     dataBuilder.addValueToMsg(0); // this is a leading zero byte so that fucking RSA works omg jesus christ documentation sucks balls
-    dataBuilder.addValueToMsg(bytesToSHA1(innerData));
+    dataBuilder.addValueToMsg(await bytesToSHA1(innerData));
     dataBuilder.addValueToMsg(innerData);
     dataBuilder.padMessageToLength(256, true);
     return dataBuilder.getBytes();

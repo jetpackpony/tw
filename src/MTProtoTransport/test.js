@@ -1,4 +1,3 @@
-const sinon = require('sinon');
 const randomBytes = require('randombytes');
 const expect = require('chai').expect;
 const { makeTmpAESKeys } = require("./index");

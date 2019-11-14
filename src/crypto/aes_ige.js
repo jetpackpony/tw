@@ -2,11 +2,11 @@ const aesjs = require('aes-js');
 const forge = require('node-forge');
 const { bytesFromHex } = require('../primeFactorization');
 
-const encrypt = function(buffer, aesKey, aesIV) {
+const encrypt = async (buffer, aesKey, aesIV) => {
 	return crypt(buffer, aesKey, aesIV, true);
 };
 
-const decrypt = function(buffer, aesKey, aesIV) {
+const decrypt = async (buffer, aesKey, aesIV) => {
 	return crypt(buffer, aesKey, aesIV, false);
 };
 

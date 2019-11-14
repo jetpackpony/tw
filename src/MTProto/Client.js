@@ -31,23 +31,23 @@ class Client {
     this.pendingReply[msgId] = { resolve, reject };
   }
 
-  msgRecieved(msg) {
-    const decrypted = this.decryptMsg(msg);
+  async msgRecieved(msg) {
+    const decrypted = await this.decryptMsg(msg);
 
   }
 
-  decryptMsg(msg) {
+  async decryptMsg(msg) {
     const res = {
       auth_key_id: msg.slice(0, 8),
       msg_key: msg.slice(8, 24),
       encrypted: msg.slice(24)
     };
-    const { msg_key, aes_key, aes_iv } = getEncryptionParams({
+    const { msg_key, aes_key, aes_iv } = await getEncryptionParams({
       authKey: this.authResult.authKey,
       inputMsgKey: res.msg_key,
       isOutgoingMsg: false
     });
-    const decrypted = decryptAES(res.encrypted, aes_key, aes_iv);
+    const decrypted = await decryptAES(res.encrypted, aes_key, aes_iv);
 
     res.salt = decrypted.slice(0, 8);
     res.session_id = decrypted.slice(8, 16);
@@ -147,7 +147,7 @@ class Client {
 
     //encrypt and send
 
-    this.sendMsg("hello this is client");
+    await this.sendMsg("hello this is client");
   }
 
   async getConfig() {
@@ -183,13 +183,13 @@ class Client {
     msg.padMessageToLengthDevidedBy(16, true, null, 12);
 
     const bodyBytes = msg.getBytes();
-    const { msg_key, aes_key, aes_iv } = getEncryptionParams({
+    const { msg_key, aes_key, aes_iv } = await getEncryptionParams({
       authKey: this.authResult.authKey,
       messageBytes: bodyBytes,
       isOutgoingMsg: true
     });
 
-    const encryptedMsg = encryptAES(bodyBytes, aes_key, aes_iv);
+    const encryptedMsg = await encryptAES(bodyBytes, aes_key, aes_iv);
 
     const final = new MessageBuilder();
     final.addValueToMsg(this.authResult.auth_key_id, 1, true);
@@ -198,7 +198,7 @@ class Client {
 
     const bytesToSend = final.getBytes();
     
-    this.sendMsg(bytesToSend);
+    await this.sendMsg(bytesToSend);
   }
 
   async ping() {
@@ -236,13 +236,13 @@ class Client {
     msg.padMessageToLengthDevidedBy(16, true, null, 12);
 
     const bodyBytes = msg.getBytes();
-    const { msg_key, aes_key, aes_iv } = getEncryptionParams({
+    const { msg_key, aes_key, aes_iv } = await getEncryptionParams({
       authKey: this.authResult.authKey,
       messageBytes: bodyBytes,
       isOutgoingMsg: true
     });
 
-    const encryptedMsg = encryptAES(bodyBytes, aes_key, aes_iv);
+    const encryptedMsg = await encryptAES(bodyBytes, aes_key, aes_iv);
 
     const final = new MessageBuilder();
     final.addValueToMsg(this.authResult.auth_key_id, 1, true);
@@ -255,7 +255,7 @@ class Client {
       this.subToResponse(msgId, resolve, reject);
     });
 
-    this.sendMsg(bytesToSend);
+    await this.sendMsg(bytesToSend);
     return p;
   }
 

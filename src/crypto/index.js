@@ -6,21 +6,21 @@ const {
   bytesFromHex
 } = require('../primeFactorization');
 const BI = require('leemon');
-const { encrypt, decrypt } = require('./aes_ige');
+const AES_IGE = require('./aes_ige');
 
-const bytesToSHA1 = (bytes, returnHex = false) => {
+const bytesToSHA1 = async (bytes, returnHex = false) => {
   const str = String.fromCharCode(...bytes);
   const hex = forge.md.sha1.create().update(str).digest().toHex();
   return bytesFromHex(hex);
 };
 
-const bytesToSHA256 = (bytes, returnHex = false) => {
+const bytesToSHA256 = async (bytes, returnHex = false) => {
   const str = String.fromCharCode(...bytes);
   const hex = forge.md.sha256.create().update(str).digest().toHex();
   return bytesFromHex(hex);
 };
 
-const TL_RSA = (data, keyStr) => {
+const TL_RSA = async (data, keyStr) => {
   const bigData = new forge.jsbn.BigInteger(data);
   const publicKey = forge.pki.publicKeyFromPem(keyStr);
   const enc = bigData.modPow(publicKey.e, publicKey.n);
@@ -36,7 +36,7 @@ const makeAuthKey = (g_a, b, p) => {
   return modPow(g_a, b, p);
 };
 
-const modPow = (baseNum, exponent, modulus) => {
+const modPow = async (baseNum, exponent, modulus) => {
   const xBigInt = BI.str2bigInt(bytesToHex(baseNum), 16);
   const yBigInt = BI.str2bigInt(bytesToHex(exponent), 16);
   const mBigInt = BI.str2bigInt(bytesToHex(modulus), 16);
@@ -52,15 +52,15 @@ const modPow = (baseNum, exponent, modulus) => {
   // return bytes;
 };
 
-const decryptAES = (bytes, key, iv) => {
-  return decrypt(bytes, key, iv);
+const decryptAES = async (bytes, key, iv) => {
+  return AES_IGE.decrypt(bytes, key, iv);
 };
 
-const encryptAES = (bytes, key, iv) => {
-  return encrypt(bytes, key, iv);
+const encryptAES = async (bytes, key, iv) => {
+  return AES_IGE.encrypt(bytes, key, iv);
 };
 
-const encryptAES_CTR = (bytes, key, iv) => {
+const encryptAES_CTR = async (bytes, key, iv) => {
   const cipher = forge.cipher.createCipher('AES-CTR', forge.util.createBuffer(key));
   cipher.start({ iv: forge.util.createBuffer(iv) });
   cipher.update(forge.util.createBuffer(bytes));
@@ -69,7 +69,7 @@ const encryptAES_CTR = (bytes, key, iv) => {
   return res;
 };
 
-const decryptAES_CTR  = (bytes, key, iv) => {
+const decryptAES_CTR  = async (bytes, key, iv) => {
   var decipher = forge.cipher.createDecipher('AES-CTR', forge.util.createBuffer(key));
   decipher.start({ iv: forge.util.createBuffer(iv) });
   decipher.update(forge.util.createBuffer(bytes));
@@ -79,17 +79,17 @@ const decryptAES_CTR  = (bytes, key, iv) => {
   return Uint8Array.from(bytesFromHex(decipher.output.toHex()));
 };
 
-const makeEncryptorAES_CTR = (key, iv) => {
+const makeEncryptorAES_CTR = async (key, iv) => {
   var aesCtr = new aesjs.ModeOfOperation.ctr(key, iv);
   return {
-    encrypt: (bytes) => aesCtr.encrypt(bytes)
+    encrypt: async (bytes) => aesCtr.encrypt(bytes)
   };
 };
 
-const makeDecryptorAES_CTR = (key, iv) => {
+const makeDecryptorAES_CTR = async (key, iv) => {
   const aesCtr = new aesjs.ModeOfOperation.ctr(key, iv);
   return {
-    decrypt: (bytes) => aesCtr.decrypt(bytes)
+    decrypt: async (bytes) => aesCtr.decrypt(bytes)
   };
 };
 

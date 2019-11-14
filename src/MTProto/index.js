@@ -8,20 +8,20 @@ const host = '149.154.167.40';
 const port = '443';
 
 const makeSocket = async (obfuscated = true) => {
-  return new Promise((resolve, reject) => {
-    const transport = new IntermediatePadded(obfuscated);
+  return new Promise(async (resolve, reject) => {
+    const transport = await IntermediatePadded(obfuscated);
     const listeners = [];
 
     const socket = new net.Socket();
-    const sendMsg = (msg) => {
-      socket.write(transport.packMessage(msg));
+    const sendMsg = async (msg) => {
+      socket.write(await transport.packMessage(msg));
     };
     const addOnMsgListener = (f) => {
       listeners.push(f);
     };
 
-    socket.on('data', function (data) {
-      const unpacked = transport.unpackMessage(data);
+    socket.on('data', async (data) => {
+      const unpacked = await transport.unpackMessage(data);
       listeners.forEach((f) => f(unpacked));
     });
     socket.on('close', function () {

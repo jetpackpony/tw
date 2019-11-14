@@ -2,10 +2,10 @@ const BI = require('leemon');
 const { bytesToSHA1, bytesToSHA256 } = require("../crypto");
 const pow2to32 = BI.str2bigInt("4294967296", 10, 1);
 
-const makeTmpAESKeys = (newNonce, serverNonce) => {
-  const newNoncePlusServer = bytesToSHA1(concatUint8([newNonce, serverNonce]));
-  const serverPlusNewNonce = bytesToSHA1(concatUint8([serverNonce, newNonce]));
-  const newNoncePlusNewNonce = bytesToSHA1(concatUint8([newNonce, newNonce]));
+const makeTmpAESKeys = async (newNonce, serverNonce) => {
+  const newNoncePlusServer = await bytesToSHA1(concatUint8([newNonce, serverNonce]));
+  const serverPlusNewNonce = await bytesToSHA1(concatUint8([serverNonce, newNonce]));
+  const newNoncePlusNewNonce = await bytesToSHA1(concatUint8([newNonce, newNonce]));
 
   const tmp_aes_key = Uint8Array.from(newNoncePlusServer.concat(serverPlusNewNonce.slice(0, 12)));
   const tmp_aes_iv = concatUint8([
@@ -80,9 +80,9 @@ const makeMsgIdHex = () => {
   return BI.bigInt2str(msg_id, 16);
 };
 
-const generateMsgKey = (authKey, messageBytes, x) => {
+const generateMsgKey = async (authKey, messageBytes, x) => {
   // msg_key_large = SHA256(substr(auth_key, 88 + x, 32) + plaintext + random_padding);
-  const msg_key_large = bytesToSHA256(
+  const msg_key_large = await bytesToSHA256(
     concatUint8([authKey.slice(88 + x, 88 + x + 32), messageBytes])
   );
   // msg_key = substr(msg_key_large, 8, 16);
@@ -91,7 +91,7 @@ const generateMsgKey = (authKey, messageBytes, x) => {
   return msg_key;
 };
 
-const getEncryptionParams = ({
+const getEncryptionParams = async ({
   authKey,
   messageBytes,
   inputMsgKey,
@@ -102,15 +102,15 @@ const getEncryptionParams = ({
   const msg_key =
     (inputMsgKey)
       ? inputMsgKey
-      : generateMsgKey(authKey, messageBytes, x);
+      : await generateMsgKey(authKey, messageBytes, x);
 
   // sha256_a = SHA256(msg_key + substr(auth_key, x, 36));
-  const sha256_a = bytesToSHA256(
+  const sha256_a = await bytesToSHA256(
     concatUint8([msg_key, authKey.slice(x, x + 36)])
   );
 
   // sha256_b = SHA256(substr(auth_key, 40 + x, 36) + msg_key);
-  const sha256_b = bytesToSHA256(
+  const sha256_b = await bytesToSHA256(
     concatUint8([authKey.slice(40 + x, 40 + x + 36), msg_key])
   );
 
