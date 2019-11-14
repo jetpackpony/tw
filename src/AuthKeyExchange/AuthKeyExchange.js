@@ -1,5 +1,4 @@
 const {
-  pqPrimeFactorization,
   bytesToHex,
   bytesFromHex
 } = require('../primeFactorization');
@@ -14,7 +13,12 @@ const {
   makeAuthKey,
   getRandomBytes
 } = require("../crypto");
-const { makeTmpAESKeys, xorArrays, makeMsgIdHex } = require("../utils");
+const {
+  makeTmpAESKeys,
+  xorArrays,
+  makeMsgIdHex,
+  primeFactorization
+} = require("../utils");
 
 
 const decryptDHAnswer = async (encAnswer, key, iv) => {
@@ -354,7 +358,7 @@ class AuthKeyExchange {
   }
 
   async makeReqDHParamsMsg(lastMsg) {
-    const pq = pqPrimeFactorization(lastMsg.data.pq.slice(1, 9));
+    const pq = await primeFactorization(lastMsg.data.pq.slice(1, 9));
 
     // generate new_nonce
     this.newNonce = this.newNonce || new Uint8Array(await getRandomBytes(32));

@@ -1,5 +1,7 @@
 const bigInt = require('big-integer');
 const { bytesToSHA1, bytesToSHA256 } = require("../crypto");
+const { pqPrimeFactorization } = require("../primeFactorization");
+
 const makeTmpAESKeys = async (newNonce, serverNonce) => {
   const newNoncePlusServer = await bytesToSHA1(concatUint8([newNonce, serverNonce]));
   const serverPlusNewNonce = await bytesToSHA1(concatUint8([serverNonce, newNonce]));
@@ -158,6 +160,10 @@ const intToBytes = (num, size = 4, littleEndian = true) => {
   return new Uint8Array(arr);
 };
 
+const primeFactorization = async (bytes) => {
+  return pqPrimeFactorization(bytes);
+};
+
 module.exports = {
   concatUint8,
   makeTmpAESKeys,
@@ -167,5 +173,6 @@ module.exports = {
   makeMsgIdHex,
   getEncryptionParams,
   bytesToInt,
-  intToBytes
+  intToBytes,
+  primeFactorization
 };
