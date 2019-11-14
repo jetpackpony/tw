@@ -1,3 +1,4 @@
+const aesjs = require('aes-js');
 const forge = require('node-forge');
 const { bytesFromHex } = require('../primeFactorization');
 
@@ -10,21 +11,10 @@ const decrypt = function(buffer, aesKey, aesIV) {
 };
 
 function crypt(buffer, aesKey, aesIV, isEncrypt) {
-	const key = forge.util.createBuffer(aesKey);
-	var cipher;
-	if (isEncrypt) {
-		cipher = forge.cipher.createCipher('AES-ECB', key);
-		cipher.mode.pad = false;
-		cipher.start();
-	} else {
-		cipher = forge.cipher.createDecipher('AES-ECB', key);
-		cipher.mode.unpad = false;
-		cipher.start();
-	}
+	const cipher = new aesjs.ModeOfOperation.ecb(aesKey);
 
-	var result = new Uint8Array(new ArrayBuffer(buffer.length));
-
-	var prevTop, prevBottom;
+	const result = new Uint8Array(new ArrayBuffer(buffer.length));
+	let prevTop, prevBottom;
 
 	if (isEncrypt) {
 		prevTop = aesIV.slice(0, 16);
@@ -34,15 +24,14 @@ function crypt(buffer, aesKey, aesIV, isEncrypt) {
 		prevBottom = aesIV.slice(0, 16);
 	}
 
-	var current = new Uint8Array(new ArrayBuffer(16));
+	const current = new Uint8Array(new ArrayBuffer(16));
 
 	for (let offset = 0; offset < buffer.length; offset += 16) {
 		current.set(buffer.slice(offset, offset + 16), 0)
 
 		xorBuffer(current, prevTop);
 
-		cipher.update(forge.util.createBuffer(current));
-		let crypted = Uint8Array.from(bytesFromHex(cipher.output.toHex().slice(-32)));
+		const crypted = (isEncrypt) ? cipher.encrypt(current) : cipher.decrypt(current);
 
 		xorBuffer(crypted, prevBottom);
 
@@ -51,7 +40,6 @@ function crypt(buffer, aesKey, aesIV, isEncrypt) {
 		prevTop = crypted;
 		prevBottom = buffer.slice(offset, offset + 16);
 	}
-	cipher.finish();
 	return result;
 }
 
