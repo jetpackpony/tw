@@ -1,4 +1,4 @@
-const { bytesFromHex } = require('../primeFactorization');
+const { hexToBytes } = require('../utils');
 const { getRandomBytes } = require('../crypto');
 
 function numToBytes (num, length, littleEndian = false) {
@@ -41,7 +41,7 @@ class MessageBuilder {
   }
 
   addStrToMsg(str, littleEndian = false, base = 16) {
-    const bytes = bytesFromHex(str);
+    const bytes = hexToBytes(str);
     if (littleEndian) {
       bytes.reverse();
     }

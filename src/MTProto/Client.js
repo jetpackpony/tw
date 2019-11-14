@@ -2,13 +2,18 @@ const fs = require('fs');
 const authResult = require('../authResult.json');
 const { MessageBuilder } = require('../MessageBuilder');
 const {
+  hexToBytes,
+  bytesToHex,
   serializeString,
   makeMsgIdHex,
-  getEncryptionParams,
   bytesToInt
 } = require('../utils');
-const { encryptAES, decryptAES, getRandomBytes } = require('../crypto');
-const { bytesToHex, bytesFromHex } = require("../primeFactorization");
+const {
+  encryptAES,
+  decryptAES,
+  getRandomBytes,
+  getEncryptionParams
+} = require('../crypto');
 
 // Client will store all messages and
 class Client {
@@ -152,7 +157,7 @@ class Client {
 
   async getConfig() {
     const b2h = bytesToHex;
-    const h2b = bytesFromHex;
+    const h2b = hexToBytes;
 
     //help.getConfig#c4f9186b = Config;
     const plainText = new MessageBuilder();
@@ -203,7 +208,7 @@ class Client {
 
   async ping() {
     const b2h = bytesToHex;
-    const h2b = bytesFromHex;
+    const h2b = hexToBytes;
 
     //ping#7abe77ec ping_id:long = Pong;
     const plainText = new MessageBuilder();

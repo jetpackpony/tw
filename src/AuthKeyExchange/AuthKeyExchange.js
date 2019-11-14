@@ -1,10 +1,7 @@
-const {
-  bytesToHex,
-  bytesFromHex
-} = require('../primeFactorization');
 const { MessageBuilder } = require('../MessageBuilder');
 const publicKeys = require('../publicKeys.json');
 const {
+  makeTmpAESKeys,
   bytesToSHA1,
   TL_RSA,
   decryptAES,
@@ -14,7 +11,7 @@ const {
   getRandomBytes
 } = require("../crypto");
 const {
-  makeTmpAESKeys,
+  bytesToHex,
   xorArrays,
   makeMsgIdHex,
   primeFactorization

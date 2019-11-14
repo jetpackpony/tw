@@ -1,20 +1,5 @@
 const bigInt = require('big-integer');
-const { bytesToSHA1, bytesToSHA256 } = require("../crypto");
 const { pqPrimeFactorization } = require("../primeFactorization");
-
-const makeTmpAESKeys = async (newNonce, serverNonce) => {
-  const newNoncePlusServer = await bytesToSHA1(concatUint8([newNonce, serverNonce]));
-  const serverPlusNewNonce = await bytesToSHA1(concatUint8([serverNonce, newNonce]));
-  const newNoncePlusNewNonce = await bytesToSHA1(concatUint8([newNonce, newNonce]));
-
-  const tmp_aes_key = concatUint8([newNoncePlusServer, serverPlusNewNonce.slice(0, 12)]);
-  const tmp_aes_iv = concatUint8([
-    concatUint8([serverPlusNewNonce.slice(12, 20), newNoncePlusNewNonce]),
-    newNonce.slice(0, 4)
-  ]);
-
-  return [tmp_aes_key, tmp_aes_iv];
-}; 
 
 const concatUint8 = (listOfArrays) => {
   const len = listOfArrays.reduce((sum, arr) => {
@@ -82,61 +67,6 @@ const makeMsgIdHex = async (date = false) => {
   return msg_id.toString(16);
 };
 
-const generateMsgKey = async (authKey, messageBytes, x) => {
-  // msg_key_large = SHA256(substr(auth_key, 88 + x, 32) + plaintext + random_padding);
-  const msg_key_large = await bytesToSHA256(
-    concatUint8([authKey.slice(88 + x, 88 + x + 32), messageBytes])
-  );
-  // msg_key = substr(msg_key_large, 8, 16);
-  const msg_key = msg_key_large.slice(8, 24);
-
-  return msg_key;
-};
-
-const getEncryptionParams = async ({
-  authKey,
-  messageBytes,
-  inputMsgKey,
-  isOutgoingMsg = true
-}) => {
-  const x = isOutgoingMsg ? 0 : 8;
-
-  const msg_key =
-    (inputMsgKey)
-      ? inputMsgKey
-      : await generateMsgKey(authKey, messageBytes, x);
-
-  // sha256_a = SHA256(msg_key + substr(auth_key, x, 36));
-  const sha256_a = await bytesToSHA256(
-    concatUint8([msg_key, authKey.slice(x, x + 36)])
-  );
-
-  // sha256_b = SHA256(substr(auth_key, 40 + x, 36) + msg_key);
-  const sha256_b = await bytesToSHA256(
-    concatUint8([authKey.slice(40 + x, 40 + x + 36), msg_key])
-  );
-
-  // aes_key = substr(sha256_a, 0, 8) + substr(sha256_b, 8, 16) + substr(sha256_a, 24, 8);
-  const aes_key = concatUint8([
-    sha256_a.slice(0, 8),
-    sha256_b.slice(8, 24),
-    sha256_a.slice(24, 32)
-  ]);
-
-  // aes_iv = substr(sha256_b, 0, 8) + substr(sha256_a, 8, 16) + substr(sha256_b, 24, 8);
-  const aes_iv = concatUint8([
-    sha256_b.slice(0, 8),
-    sha256_a.slice(8, 24),
-    sha256_b.slice(24, 32)
-  ]);
-
-  return {
-    msg_key,
-    aes_key,
-    aes_iv
-  };
-};
-
 const bytesToInt = (bytes, littleEndian = true) => {
   let input = bytes.slice(0);
   if (Array.isArray(input)) {
@@ -164,15 +94,40 @@ const primeFactorization = async (bytes) => {
   return pqPrimeFactorization(bytes);
 };
 
+const bytesToHex = (bytes = []) => {
+  const arr = [];
+  for (let i = 0; i < bytes.length; i++) {
+    arr.push((bytes[i] < 16 ? '0' : '') + (bytes[i] || 0).toString(16));
+  }
+  return arr.join('')
+};
+
+const hexToBytes = (hexString) => {
+  const len = hexString.length;
+  let start = 0;
+  const bytes = [];
+
+  if (hexString.length % 2 !== 0) {
+    bytes.push(parseInt(hexString.charAt(0), 16));
+    start++;
+  }
+
+  for (let i = start; i < len; i += 2) {
+    bytes.push(parseInt(hexString.substr(i, 2), 16));
+  }
+
+  return bytes
+};
+
 module.exports = {
   concatUint8,
-  makeTmpAESKeys,
   xorArrays,
   serializeString,
   unserializeString,
   makeMsgIdHex,
-  getEncryptionParams,
   bytesToInt,
   intToBytes,
-  primeFactorization
+  primeFactorization,
+  bytesToHex,
+  hexToBytes
 };

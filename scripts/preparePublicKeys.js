@@ -1,6 +1,6 @@
 const forge = require('node-forge');
 const fs = require('fs');
-const { bytesFromHex } = require('../src/primeFactorization');
+const { hexToBytes } = require('../src/utils');
 
 const keys = fs.readFileSync('./scripts/publicKeys.txt', 'utf8').split("\n\n");
 
@@ -28,8 +28,8 @@ const keyMap = keys.reduce((acc, k) => {
 
   let n = forgeKey.n.toString(16);
   let e = forgeKey.e.toString(16);
-  const nBytes = bytesFromHex(n);
-  const eBytes = bytesFromHex(e);
+  const nBytes = hexToBytes(n);
+  const eBytes = hexToBytes(e);
 
   const bytes = serializeString(nBytes).concat(serializeString(eBytes))
   const str = String.fromCharCode(...bytes);

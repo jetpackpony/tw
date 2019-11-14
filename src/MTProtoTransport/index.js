@@ -1,5 +1,4 @@
-const { concatUint8, intToBytes, bytesToInt } = require('../utils');
-const { bytesToHex, bytesFromHex } = require("../primeFactorization");
+const { bytesToHex, concatUint8, intToBytes, bytesToInt } = require('../utils');
 const {
   makeEncryptorAES_CTR,
   makeDecryptorAES_CTR,

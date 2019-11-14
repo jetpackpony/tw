@@ -1,6 +1,4 @@
 const expect = require('chai').expect;
-const { makeTmpAESKeys } = require("./index");
-const { bytesToHex, bytesFromHex } = require('../primeFactorization');
 const {
   modPow,
   makeEncryptorAES_CTR,
@@ -9,23 +7,25 @@ const {
   decryptAES,
   bytesToSHA1,
   bytesToSHA256,
-  TL_RSA
-} = require('../crypto');
+  TL_RSA,
+  makeTmpAESKeys
+} = require('./index');
+const { hexToBytes, bytesToHex } = require("../utils");
 
 describe("crypto", () => {
   describe('AES-IGE', function () {
     const data = [
       {
-        encrypted: Uint8Array.from(bytesFromHex("1A8519A6557BE652E9DA8E43DA4EF4453CF456B4CA488AA383C79C98B34797CB")),
-        key: Uint8Array.from(bytesFromHex("000102030405060708090A0B0C0D0E0F")),
-        iv: Uint8Array.from(bytesFromHex("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F")),
-        text: Uint8Array.from(bytesFromHex("0000000000000000000000000000000000000000000000000000000000000000")),
+        encrypted: Uint8Array.from(hexToBytes("1A8519A6557BE652E9DA8E43DA4EF4453CF456B4CA488AA383C79C98B34797CB")),
+        key: Uint8Array.from(hexToBytes("000102030405060708090A0B0C0D0E0F")),
+        iv: Uint8Array.from(hexToBytes("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F")),
+        text: Uint8Array.from(hexToBytes("0000000000000000000000000000000000000000000000000000000000000000")),
       },
       {
-        encrypted: Uint8Array.from(bytesFromHex("4C2E204C6574277320686F70652042656E20676F74206974207269676874210A")),
-        key: Uint8Array.from(bytesFromHex("5468697320697320616E20696D706C65")),
-        iv: Uint8Array.from(bytesFromHex("6D656E746174696F6E206F6620494745206D6F646520666F72204F70656E5353")),
-        text: Uint8Array.from(bytesFromHex("99706487A1CDE613BC6DE0B6F24B1C7AA448C8B9C3403E3467A8CAD89340F53B")),
+        encrypted: Uint8Array.from(hexToBytes("4C2E204C6574277320686F70652042656E20676F74206974207269676874210A")),
+        key: Uint8Array.from(hexToBytes("5468697320697320616E20696D706C65")),
+        iv: Uint8Array.from(hexToBytes("6D656E746174696F6E206F6620494745206D6F646520666F72204F70656E5353")),
+        text: Uint8Array.from(hexToBytes("99706487A1CDE613BC6DE0B6F24B1C7AA448C8B9C3403E3467A8CAD89340F53B")),
       }
     ];
     it('should decrypt', async () => {
@@ -52,14 +52,14 @@ describe("crypto", () => {
   });
 
   describe('AES-CTR', function () {
-    const input = Uint8Array.from(bytesFromHex("b11a087cdbf4401f2d471ad88a95901adb262d9785fe204da3090f9ff3ae43a697be93f2a3eb103350e8fb5ca14e0ea2fe06658f4e553dcbbc8363372141752d"));
+    const input = Uint8Array.from(hexToBytes("b11a087cdbf4401f2d471ad88a95901adb262d9785fe204da3090f9ff3ae43a697be93f2a3eb103350e8fb5ca14e0ea2fe06658f4e553dcbbc8363372141752d"));
 
-    const encKey = Uint8Array.from(bytesFromHex("2d471ad88a95901adb262d9785fe204da3090f9ff3ae43a697be93f2a3eb1033"));
-    const encIV = Uint8Array.from(bytesFromHex("50e8fb5ca14e0ea2fe06658f4e553dcb"));
+    const encKey = Uint8Array.from(hexToBytes("2d471ad88a95901adb262d9785fe204da3090f9ff3ae43a697be93f2a3eb1033"));
+    const encIV = Uint8Array.from(hexToBytes("50e8fb5ca14e0ea2fe06658f4e553dcb"));
     const encOut = [
-      Uint8Array.from(bytesFromHex('589e5e519d21c34d283604735964587a160cc7e84f4bd964273f975adcf24b964115131c44fb6c4926bc7a32099e67790552eab358cd5205574fcedbdb329e2d')),
-      Uint8Array.from(bytesFromHex('3e6122a0bb5783c58b263f58064b65639be9a67b328388d75b53fd62a569db7e82352dcbca3fe86034ba91e668d141b024bace413f70a11af80778e2eca0678c')),
-      Uint8Array.from(bytesFromHex('11f25eae2f252570d1def310faec8eb780a0e1af747f7feed16795ebeedb9a845ed3e36550cedce0073f25ed045f33fc5aad6b92a0db6f07e71c3b22fb29c37c'))
+      Uint8Array.from(hexToBytes('589e5e519d21c34d283604735964587a160cc7e84f4bd964273f975adcf24b964115131c44fb6c4926bc7a32099e67790552eab358cd5205574fcedbdb329e2d')),
+      Uint8Array.from(hexToBytes('3e6122a0bb5783c58b263f58064b65639be9a67b328388d75b53fd62a569db7e82352dcbca3fe86034ba91e668d141b024bace413f70a11af80778e2eca0678c')),
+      Uint8Array.from(hexToBytes('11f25eae2f252570d1def310faec8eb780a0e1af747f7feed16795ebeedb9a845ed3e36550cedce0073f25ed045f33fc5aad6b92a0db6f07e71c3b22fb29c37c'))
     ];
     it('should encrypt', async () => {
       const encryptor = await makeEncryptorAES_CTR(encKey, encIV);
@@ -68,12 +68,12 @@ describe("crypto", () => {
       expect(await encryptor.encrypt(input)).to.eql(encOut[2]);
     });
 
-    const decKey = Uint8Array.from(bytesFromHex("cb3d554e8f6506fea20e4ea15cfbe8503310eba3f293be97a643aef39f0f09a3"));
-    const decIV = Uint8Array.from(bytesFromHex("4d20fe85972d26db1a90958ad81a472d"));
+    const decKey = Uint8Array.from(hexToBytes("cb3d554e8f6506fea20e4ea15cfbe8503310eba3f293be97a643aef39f0f09a3"));
+    const decIV = Uint8Array.from(hexToBytes("4d20fe85972d26db1a90958ad81a472d"));
     const decOut = [
-      Uint8Array.from(bytesFromHex('222fc81cb9c6b02d62d2bd80ad1624ec29cf84f7344aca34a65ff8b70a01fdb7714cba4ec0e75f133be0dbbe73d1a161f37d8ff0b51ce4aafd47b7ff68230eac')),
-      Uint8Array.from(bytesFromHex('4717a870866f0e9c86116572b3551fe3c7795c6fd39956e76406a9626ed371f74e5736f730e5e5e778a46749c23bea79b2d3f010aade4ad7f8cc531a334486e5')),
-      Uint8Array.from(bytesFromHex('a0e21a7adb895aab57b71a12cdf5bc207da4cdfb2a8c54d67986f9424138b548a23ef56c614e099add61d30e9bf60ed4db52db19431a911440c4339e1570b545'))
+      Uint8Array.from(hexToBytes('222fc81cb9c6b02d62d2bd80ad1624ec29cf84f7344aca34a65ff8b70a01fdb7714cba4ec0e75f133be0dbbe73d1a161f37d8ff0b51ce4aafd47b7ff68230eac')),
+      Uint8Array.from(hexToBytes('4717a870866f0e9c86116572b3551fe3c7795c6fd39956e76406a9626ed371f74e5736f730e5e5e778a46749c23bea79b2d3f010aade4ad7f8cc531a334486e5')),
+      Uint8Array.from(hexToBytes('a0e21a7adb895aab57b71a12cdf5bc207da4cdfb2a8c54d67986f9424138b548a23ef56c614e099add61d30e9bf60ed4db52db19431a911440c4339e1570b545'))
     ];
     it('should decrypt', async () => {
       const decryptor = await makeDecryptorAES_CTR(decKey, decIV);
@@ -115,14 +115,14 @@ describe("crypto", () => {
 
   describe("sha1", () => {
     it("calculates correctly", async () => {
-      const input = new Uint8Array(bytesFromHex("54686520717569636b2062726f776e20666f78206a756d7073"));
-      const output = new Uint8Array(bytesFromHex("743e27565bb39d4cf6cdf7b19450f94ef12b2206"));
+      const input = new Uint8Array(hexToBytes("54686520717569636b2062726f776e20666f78206a756d7073"));
+      const output = new Uint8Array(hexToBytes("743e27565bb39d4cf6cdf7b19450f94ef12b2206"));
       const res = await bytesToSHA1(input);
       expect(res).to.eql(output);
     });
     it("calculates correctly", async () => {
-      const input = new Uint8Array(bytesFromHex("206f76657220746865206c617a7920646f672e"));
-      const output = new Uint8Array(bytesFromHex("54f7530d2b3f92842859788b4e4e589b544083c4"));
+      const input = new Uint8Array(hexToBytes("206f76657220746865206c617a7920646f672e"));
+      const output = new Uint8Array(hexToBytes("54f7530d2b3f92842859788b4e4e589b544083c4"));
       const res = await bytesToSHA1(input);
       expect(res).to.eql(output);
     });
@@ -130,14 +130,14 @@ describe("crypto", () => {
 
   describe("sha256", () => {
     it("calculates correctly", async () => {
-      const input = new Uint8Array(bytesFromHex("54686520717569636b2062726f776e20666f78206a756d7073"));
-      const output = new Uint8Array(bytesFromHex("8df831769cd51e4f57808343603e97c1ea44fcab46bb595a5000b9ad1d03bd70"));
+      const input = new Uint8Array(hexToBytes("54686520717569636b2062726f776e20666f78206a756d7073"));
+      const output = new Uint8Array(hexToBytes("8df831769cd51e4f57808343603e97c1ea44fcab46bb595a5000b9ad1d03bd70"));
       const res = await bytesToSHA256(input);
       expect(res).to.eql(output);
     });
     it("calculates correctly", async () => {
-      const input = new Uint8Array(bytesFromHex("206f76657220746865206c617a7920646f672e"));
-      const output = new Uint8Array(bytesFromHex("24b757ce9a2a426f89c216c95f99c63efbb3382dcbbbd451c1b793eeda93a63d"));
+      const input = new Uint8Array(hexToBytes("206f76657220746865206c617a7920646f672e"));
+      const output = new Uint8Array(hexToBytes("24b757ce9a2a426f89c216c95f99c63efbb3382dcbbbd451c1b793eeda93a63d"));
       const res = await bytesToSHA256(input);
       expect(res).to.eql(output);
     });
@@ -150,18 +150,30 @@ describe("crypto", () => {
       "exp": "10001"
     };
     it("calculates correctly", async () => {
-      const input = new Uint8Array(bytesFromHex("54686520717569636b2062726f776e20666f78206a756d7073"));
-      const output = new Uint8Array(bytesFromHex("8c35b0be14d078c14b84d25e7bed0d880fecc0450f899e24cc6fe8ccce04a957ac434dbcbc1680de4601ad5bda2a6f89272fe2b1a020c9bb21ea0c3b0f3b9d5bea259105f004ab8489c412e44a1e1d4e3c2a5d6b2011a362607208a45782ff70c57b338c9e90a9557fa7fb86568067afda247329c66ef698d23044f1d0a9a28e0fcb3ec5060b841f1ff3cf5a3168cbdeb5fda26e4c6b8ca6e1f8dff9ee4763de717dd5108085fe620172cb1929f407e8f4adfb2e1c84313d21172a44e0261e6bd9dbb861420497609510b288f1df438cc7abe5fe444bd5e33ab66804bea8468994dbe03dece783774e6589eea3f8a8aadd0af829ceb351ef796bfebe5fd83522"));
+      const input = new Uint8Array(hexToBytes("54686520717569636b2062726f776e20666f78206a756d7073"));
+      const output = new Uint8Array(hexToBytes("8c35b0be14d078c14b84d25e7bed0d880fecc0450f899e24cc6fe8ccce04a957ac434dbcbc1680de4601ad5bda2a6f89272fe2b1a020c9bb21ea0c3b0f3b9d5bea259105f004ab8489c412e44a1e1d4e3c2a5d6b2011a362607208a45782ff70c57b338c9e90a9557fa7fb86568067afda247329c66ef698d23044f1d0a9a28e0fcb3ec5060b841f1ff3cf5a3168cbdeb5fda26e4c6b8ca6e1f8dff9ee4763de717dd5108085fe620172cb1929f407e8f4adfb2e1c84313d21172a44e0261e6bd9dbb861420497609510b288f1df438cc7abe5fe444bd5e33ab66804bea8468994dbe03dece783774e6589eea3f8a8aadd0af829ceb351ef796bfebe5fd83522"));
       const res = await TL_RSA(input, key);
       const b = bytesToHex(res);
       expect(res).to.eql(output);
     });
     it("calculates correctly", async () => {
-      const input = new Uint8Array(bytesFromHex("206f76657220746865206c617a7920646f672e"));
-      const output = new Uint8Array(bytesFromHex("807b0cd65909b28df5858c3e2e4f20885fd386791cc3b990d557bbf339c4f58a000263e5b1622c7eaf9a9dbc044470973039166f8889fec65fa2c4af3ccbfbdd8b0ee3cfc3112f670352568a14c4b220b290700168b04c82692901df3cccd20e293f4344d229e1b4976425cde86090fcbe1e4e2861b3d9a56b5c5a3602ffdd3d83b0451788cf3241361228bd49a5bfe83957b0c5214df4af23d6f281179753ee0de2f0fff9368fd2f3f18dff2954b6db281ef3f3e87ee58f4b6d22d3ca8da2fa923cde9025d769832d27c6cdd216c532696b8c148501ddfbecc5e37984eed865156e30e7de2be3c0e87fa5827924b1ad28dbd747dab789c04b195464c3ab2184"));
+      const input = new Uint8Array(hexToBytes("206f76657220746865206c617a7920646f672e"));
+      const output = new Uint8Array(hexToBytes("807b0cd65909b28df5858c3e2e4f20885fd386791cc3b990d557bbf339c4f58a000263e5b1622c7eaf9a9dbc044470973039166f8889fec65fa2c4af3ccbfbdd8b0ee3cfc3112f670352568a14c4b220b290700168b04c82692901df3cccd20e293f4344d229e1b4976425cde86090fcbe1e4e2861b3d9a56b5c5a3602ffdd3d83b0451788cf3241361228bd49a5bfe83957b0c5214df4af23d6f281179753ee0de2f0fff9368fd2f3f18dff2954b6db281ef3f3e87ee58f4b6d22d3ca8da2fa923cde9025d769832d27c6cdd216c532696b8c148501ddfbecc5e37984eed865156e30e7de2be3c0e87fa5827924b1ad28dbd747dab789c04b195464c3ab2184"));
       const res = await TL_RSA(input, key);
       const b = bytesToHex(res);
       expect(res).to.eql(output);
+    });
+  });
+
+  describe('makeTmpAESKeys', function () {
+    it('should make correct keys', async () => {
+      const newNonce = Uint8Array.from(hexToBytes("311C85DB234AA2640AFC4A76A735CF5B1F0FD68BD17FA181E1229AD867CC024D"));
+      const serverNonce = Uint8Array.from(hexToBytes("A5CF4D33F4A11EA877BA4AA573907330"));
+
+      const [key, iv] = await makeTmpAESKeys(newNonce, serverNonce);
+
+      expect(key).to.eql(Uint8Array.from(hexToBytes("F011280887C7BB01DF0FC4E17830E0B91FBB8BE4B2267CB985AE25F33B527253")));
+      expect(iv).to.eql(Uint8Array.from(hexToBytes("3212D579EE35452ED23E0D0C92841AA7D31B2E9BDEF2151E80D15860311C85DB")));
     });
   });
 });
