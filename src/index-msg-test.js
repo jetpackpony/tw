@@ -40,17 +40,17 @@ const makeFakeSocket = () => {
 const start = async () => {
   const client = await MTproto({
     apiId, apiHash,
-    socket: makeFakeSocket(),
+    //socket: makeFakeSocket(),
     //msgIds: []
   });
 
-  const getConfig = async () => {
+  const ping = async () => {
     const res = await client.send('ping');
     console.log("Got response: ", res);
 
   };
 
-  getConfig();
+  ping();
 };
 
 start();
