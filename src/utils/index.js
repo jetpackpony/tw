@@ -7,9 +7,9 @@ const makeTmpAESKeys = async (newNonce, serverNonce) => {
   const serverPlusNewNonce = await bytesToSHA1(concatUint8([serverNonce, newNonce]));
   const newNoncePlusNewNonce = await bytesToSHA1(concatUint8([newNonce, newNonce]));
 
-  const tmp_aes_key = Uint8Array.from(newNoncePlusServer.concat(serverPlusNewNonce.slice(0, 12)));
+  const tmp_aes_key = concatUint8([newNoncePlusServer, serverPlusNewNonce.slice(0, 12)]);
   const tmp_aes_iv = concatUint8([
-    Uint8Array.from(serverPlusNewNonce.slice(12, 20).concat(newNoncePlusNewNonce)),
+    concatUint8([serverPlusNewNonce.slice(12, 20), newNoncePlusNewNonce]),
     newNonce.slice(0, 4)
   ]);
 
@@ -86,7 +86,7 @@ const generateMsgKey = async (authKey, messageBytes, x) => {
     concatUint8([authKey.slice(88 + x, 88 + x + 32), messageBytes])
   );
   // msg_key = substr(msg_key_large, 8, 16);
-  const msg_key = Uint8Array.from(msg_key_large.slice(8, 24));
+  const msg_key = msg_key_large.slice(8, 24);
 
   return msg_key;
 };
@@ -115,18 +115,18 @@ const getEncryptionParams = async ({
   );
 
   // aes_key = substr(sha256_a, 0, 8) + substr(sha256_b, 8, 16) + substr(sha256_a, 24, 8);
-  const aes_key = Uint8Array.from(
-    sha256_a.slice(0, 8)
-      .concat(sha256_b.slice(8, 24))
-      .concat(sha256_a.slice(24, 32))
-  );
+  const aes_key = concatUint8([
+    sha256_a.slice(0, 8),
+    sha256_b.slice(8, 24),
+    sha256_a.slice(24, 32)
+  ]);
 
   // aes_iv = substr(sha256_b, 0, 8) + substr(sha256_a, 8, 16) + substr(sha256_b, 24, 8);
-  const aes_iv = Uint8Array.from(
-    sha256_b.slice(0, 8)
-      .concat(sha256_a.slice(8, 24))
-      .concat(sha256_b.slice(24, 32))
-  );
+  const aes_iv = concatUint8([
+    sha256_b.slice(0, 8),
+    sha256_a.slice(8, 24),
+    sha256_b.slice(24, 32)
+  ]);
 
   return {
     msg_key,

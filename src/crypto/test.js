@@ -6,7 +6,9 @@ const {
   makeEncryptorAES_CTR,
   makeDecryptorAES_CTR,
   encryptAES,
-  decryptAES
+  decryptAES,
+  bytesToSHA1,
+  bytesToSHA256
 } = require('../crypto');
 
 describe("crypto", () => {
@@ -107,6 +109,36 @@ describe("crypto", () => {
         const res = await modPow(bases[i], exps[i], mods[i]);
         expect(Uint8Array.from(res)).to.eql(ouputs[i]);
       }
+    });
+  });
+
+  describe("sha1", () => {
+    it("calculates correctly", async () => {
+      const input = new Uint8Array(bytesFromHex("54686520717569636b2062726f776e20666f78206a756d7073"));
+      const output = new Uint8Array(bytesFromHex("743e27565bb39d4cf6cdf7b19450f94ef12b2206"));
+      const res = await bytesToSHA1(input);
+      expect(res).to.eql(output);
+    });
+    it("calculates correctly", async () => {
+      const input = new Uint8Array(bytesFromHex("206f76657220746865206c617a7920646f672e"));
+      const output = new Uint8Array(bytesFromHex("54f7530d2b3f92842859788b4e4e589b544083c4"));
+      const res = await bytesToSHA1(input);
+      expect(res).to.eql(output);
+    });
+  });
+
+  describe("sha256", () => {
+    it("calculates correctly", async () => {
+      const input = new Uint8Array(bytesFromHex("54686520717569636b2062726f776e20666f78206a756d7073"));
+      const output = new Uint8Array(bytesFromHex("8df831769cd51e4f57808343603e97c1ea44fcab46bb595a5000b9ad1d03bd70"));
+      const res = await bytesToSHA256(input);
+      expect(res).to.eql(output);
+    });
+    it("calculates correctly", async () => {
+      const input = new Uint8Array(bytesFromHex("206f76657220746865206c617a7920646f672e"));
+      const output = new Uint8Array(bytesFromHex("24b757ce9a2a426f89c216c95f99c63efbb3382dcbbbd451c1b793eeda93a63d"));
+      const res = await bytesToSHA256(input);
+      expect(res).to.eql(output);
     });
   });
 });

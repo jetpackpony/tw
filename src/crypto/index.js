@@ -1,3 +1,4 @@
+const { sha1, sha256 } = require('crypto-hash');
 const aesjs = require('aes-js');
 const forge = require('node-forge');
 const {
@@ -9,15 +10,11 @@ const BI = require('leemon');
 const AES_IGE = require('./aes_ige');
 
 const bytesToSHA1 = async (bytes, returnHex = false) => {
-  const str = String.fromCharCode(...bytes);
-  const hex = forge.md.sha1.create().update(str).digest().toHex();
-  return bytesFromHex(hex);
+  return new Uint8Array(await sha1(bytes, { outputFormat: "buffer" }));
 };
 
 const bytesToSHA256 = async (bytes, returnHex = false) => {
-  const str = String.fromCharCode(...bytes);
-  const hex = forge.md.sha256.create().update(str).digest().toHex();
-  return bytesFromHex(hex);
+  return new Uint8Array(await sha256(bytes, { outputFormat: "buffer" }));
 };
 
 const TL_RSA = async (data, keyStr) => {
