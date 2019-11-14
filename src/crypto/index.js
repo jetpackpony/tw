@@ -1,3 +1,4 @@
+const aesjs = require('aes-js');
 const forge = require('node-forge');
 const {
   pqPrimeFactorization,
@@ -79,32 +80,16 @@ const decryptAES_CTR  = (bytes, key, iv) => {
 };
 
 const makeEncryptorAES_CTR = (key, iv) => {
-  const cipher = forge.cipher.createCipher('AES-CTR', forge.util.createBuffer(key));
-  cipher.start({ iv: forge.util.createBuffer(iv) });
-
-  const encrypt = (bytes) => {
-    cipher.update(forge.util.createBuffer(bytes));
-    const res = Uint8Array.from(bytesFromHex(cipher.output.toHex()));
-    cipher.output = forge.util.createBuffer();
-    return res;
-  };
+  var aesCtr = new aesjs.ModeOfOperation.ctr(key, iv);
   return {
-    encrypt
+    encrypt: (bytes) => aesCtr.encrypt(bytes)
   };
 };
 
 const makeDecryptorAES_CTR = (key, iv) => {
-  var decipher = forge.cipher.createDecipher('AES-CTR', forge.util.createBuffer(key));
-  decipher.start({ iv: forge.util.createBuffer(iv) });
-
-  const decrypt = (bytes) => {
-    decipher.update(forge.util.createBuffer(bytes));
-    const res = Uint8Array.from(bytesFromHex(decipher.output.toHex()));
-    decipher.output = forge.util.createBuffer();
-    return res;
-  };
+  const aesCtr = new aesjs.ModeOfOperation.ctr(key, iv);
   return {
-    decrypt
+    decrypt: (bytes) => aesCtr.decrypt(bytes)
   };
 };
 
@@ -119,5 +104,6 @@ module.exports = {
   makeG_B,
   makeAuthKey,
   makeEncryptorAES_CTR,
-  makeDecryptorAES_CTR
+  makeDecryptorAES_CTR,
+  modPow
 };
