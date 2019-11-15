@@ -23,7 +23,9 @@ describe('utils', function () {
       [[86, 24, 183, 195], [93, 106, 82, 185]],
       [[111, 104, 123, 191], [112, 83, 110, 71]]
     ]
-    it('should calculate correctly', async () => {
+    it('should calculate correctly', async function () {
+      // Some browsers take a lot of time to calc this. (Edge in VirtualBox)
+      this.timeout(20000);
       for (let i = 0; i < inputs.length; i++) {
         const [p, q] = await primeFactorization(inputs[i]);
         expect(p).to.eql(outputs[i][0]);
