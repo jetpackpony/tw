@@ -4,21 +4,24 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha src/**/test.js",
+    "test": "parcel src/test/test.html --https",
     "prepare-public-keys": "node scripts/preparePublicKeys.js",
-    "start": "node src/index.js"
+    "start": "parcel src/index.html --https",
+    "build": "parcel build src/index.html"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@babel/runtime": "^7.7.2",
     "aes-js": "^3.1.2",
     "big-integer": "^1.6.48",
-    "crypto-hash": "^1.2.2",
-    "node-forge": "^0.9.1",
-    "randombytes": "^2.1.0"
+    "node-forge": "^0.9.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.7.2",
+    "@babel/plugin-proposal-class-properties": "^7.7.0",
+    "@babel/plugin-transform-runtime": "^7.6.2",
     "chai": "^4.2.0",
     "mocha": "^6.2.2"
   }

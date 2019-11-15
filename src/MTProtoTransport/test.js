@@ -2,7 +2,7 @@ const expect = require('chai').expect;
 const { IntermediatePadded } = require('../MTProtoTransport');
 const { hexToBytes } = require("../utils");
 
-describe('IntermediatePadded', function () {
+describe.skip('IntermediatePadded', function () {
   const testing = {
     getRandomBytes: () => (new Uint8Array(5)).fill(3),
     obfParams: {

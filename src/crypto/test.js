@@ -1,3 +1,5 @@
+import { getRandomBytes } from './index';
+
 const expect = require('chai').expect;
 const {
   modPow,
@@ -174,6 +176,13 @@ describe("crypto", () => {
 
       expect(key).to.eql(Uint8Array.from(hexToBytes("F011280887C7BB01DF0FC4E17830E0B91FBB8BE4B2267CB985AE25F33B527253")));
       expect(iv).to.eql(Uint8Array.from(hexToBytes("3212D579EE35452ED23E0D0C92841AA7D31B2E9BDEF2151E80D15860311C85DB")));
+    });
+  });
+
+  describe.only('getRandomBytes', function () {
+    it('should return correct length array', async () => {
+      const bytes = await getRandomBytes(15);
+      expect(bytes.length).to.equal(15);
     });
   });
 });

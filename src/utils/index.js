@@ -1,6 +1,12 @@
 const bigInt = require('big-integer');
 const { factorize } = require("./primeFactorization");
 
+const getWindow = () => {
+  if (typeof self !== 'undefined') return self;
+  if (typeof window !== 'undefined') return window;
+  if (typeof global !== 'undefined') return global;
+};
+
 const concatUint8 = (listOfArrays) => {
   const len = listOfArrays.reduce((sum, arr) => {
     sum += arr.length;
@@ -131,5 +137,6 @@ module.exports = {
   intToBytes,
   primeFactorization,
   bytesToHex,
-  hexToBytes
+  hexToBytes,
+  getWindow
 };
