@@ -31,8 +31,7 @@ class MessageBuilder {
   addValueToMsg(value, length = 1, littleEndian = false) {
     let bytes = [];
     if (Array.isArray(value) || value.constructor === Uint8Array) {
-      value.forEach((v) => bytes.push(valueToBytes(v, length, littleEndian)));
-      bytes = bytes.flat();
+      value.forEach((v) => bytes = bytes.concat(valueToBytes(v, length, littleEndian)));
     } else {
       bytes = valueToBytes(value, length, littleEndian);
     }
