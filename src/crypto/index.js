@@ -1,17 +1,20 @@
+import sha1 from './sha1';
 const bigInt = require('big-integer');
 const randomBytes = require('randombytes');
-const { sha1, sha256 } = require('crypto-hash');
 const aesjs = require('aes-js');
 const forge = require('node-forge');
 const AES_IGE = require('./aes_ige');
-const { hexToBytes, bytesToHex, concatUint8 } = require('../utils');
+const { hexToBytes, bytesToHex, concatUint8, getWindow } = require('../utils');
 
-const bytesToSHA1 = async (bytes, returnHex = false) => {
-  return new Uint8Array(await sha1(bytes, { outputFormat: "buffer" }));
+const bytesToSHA1 = async (bytes) => {
+  const res = sha1(bytes);
+  return res;
 };
 
-const bytesToSHA256 = async (bytes, returnHex = false) => {
-  return new Uint8Array(await sha256(bytes, { outputFormat: "buffer" }));
+const bytesToSHA256 = async (bytes) => {
+  const w = getWindow();
+  const res = new Uint8Array(await w.crypto.subtle.digest("SHA-256", bytes));
+  return res;
 };
 
 const TL_RSA = async (data, key) => {
