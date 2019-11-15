@@ -1,6 +1,5 @@
 import sha1 from './sha1';
 const bigInt = require('big-integer');
-const randomBytes = require('randombytes');
 const aesjs = require('aes-js');
 const forge = require('node-forge');
 const AES_IGE = require('./aes_ige');
@@ -90,7 +89,9 @@ const makeDecryptorAES_CTR = async (key, iv) => {
 };
 
 const getRandomBytes = async (number) => {
-  return randomBytes(number);
+  const res = new Uint8Array(new ArrayBuffer(number));
+  getWindow().crypto.getRandomValues(res);
+  return res;
 };
 
 const makeTmpAESKeys = async (newNonce, serverNonce) => {
