@@ -4,9 +4,15 @@ const { IntermediatePadded } = require('../MTProtoTransport');
 const Client = require('./Client');
 const AuthKeyExchange = require('../AuthKeyExchange/AuthKeyExchange');
 
-const HOST = '149.154.167.40';
-const PORT = '80';
-const URI = "apis";
+// const PROTO = 'ws';
+// const HOST = '149.154.167.40';
+// const PORT = '80';
+// const URI = "apis";
+// const SUBPROTO = "binary";
+const PROTO = 'wss';
+const HOST = 'pluto.web.telegram.org';
+const PORT = '443';
+const URI = "apiws_test";
 const SUBPROTO = "binary";
 
 const makeSocket = async (obfuscated = true) => {
@@ -14,7 +20,7 @@ const makeSocket = async (obfuscated = true) => {
     const transport = await IntermediatePadded(obfuscated);
     let listeners = [];
 
-    const socket = new WebSocket(`ws://${HOST}:${PORT}/${URI}`, SUBPROTO);
+    const socket = new WebSocket(`${PROTO}://${HOST}:${PORT}/${URI}`, SUBPROTO);
     socket.binaryType = 'arraybuffer';
 
     const sendMsg = async (msg) => {
