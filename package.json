@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "parcel test/test.html",
+    "test": "parcel src/test/test.html --https",
     "prepare-public-keys": "node scripts/preparePublicKeys.js",
     "start": "parcel src/index.html",
     "build": "parcel build src/index.html"
