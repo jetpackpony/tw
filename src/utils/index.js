@@ -21,6 +21,15 @@ const concatUint8 = (listOfArrays) => {
   return uint8;
 };
 
+const isEqualUint8 = (arr1, arr2) => {
+  if (arr1.constructor !== arr2.constructor) return false;
+  if (arr1.length !== arr2.length) return false;
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) return false;
+  }
+  return true;
+};
+
 const xorArrays = (arr1, arr2) => {
   const res = new Uint8Array(new ArrayBuffer(arr1.length));
 	for (let i = 0; i < arr1.length; i++) {
@@ -127,8 +136,17 @@ const hexToBytes = (hexString) => {
   return bytes
 };
 
+// Returns the number of padding bytes you need to add
+// for length to be divisible by mod
+const numberToPadToLengthDevidedBy = (mod, length) => {
+  let lenDiff = mod - length % mod;
+  return (lenDiff <= 0 || lenDiff >= mod) ? 0 : lenDiff;
+};
+
+
 module.exports = {
   concatUint8,
+  isEqualUint8,
   xorArrays,
   serializeString,
   unserializeString,
@@ -138,5 +156,6 @@ module.exports = {
   primeFactorization,
   bytesToHex,
   hexToBytes,
-  getWindow
+  getWindow,
+  numberToPadToLengthDevidedBy
 };

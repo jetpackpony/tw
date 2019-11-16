@@ -179,7 +179,7 @@ describe("crypto", () => {
     });
   });
 
-  describe.only('getRandomBytes', function () {
+  describe('getRandomBytes', function () {
     it('should return correct length array', async () => {
       const bytes = await getRandomBytes(15);
       expect(bytes.length).to.equal(15);
