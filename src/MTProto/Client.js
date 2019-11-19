@@ -78,7 +78,10 @@ class Client {
           console.log("PONG!");
         }
       });
-    } 
+    } else {
+      // not container
+      console.log();
+    }
 
     const head = bytesToHex(res.msg_data.slice(0, 4).reverse());
     // pong

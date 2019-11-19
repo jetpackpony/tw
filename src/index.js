@@ -15,7 +15,13 @@ const start = async () => {
     console.log("Got response: ", res);
 
   };
+  const getConfig = async () => {
+    const res = await client.send('help.getConfig');
+    console.log("Got response: ", res);
+
+  };
 
   ping();
+  //getConfig();
 };
 start();
