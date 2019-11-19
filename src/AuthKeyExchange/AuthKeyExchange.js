@@ -237,7 +237,7 @@ class AuthKeyExchange {
     // message_length
     builder.addValueToMsg(20, 4, true);
 
-    // %(req_pq)
+    // %(req_pq_multi)
     //builder.addValueToMsg(0x60469778, 4, true);
     builder.addValueToMsg(0xbe7e8ef1, 4, true);
 

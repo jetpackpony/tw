@@ -643,6 +643,17 @@
       "type": "ResPQ"
     },
     {
+      "id": "3195965169",
+      "method": "req_pq_multi",
+      "params": [
+        {
+          "name": "nonce",
+          "type": "int128"
+        }
+      ],
+      "type": "ResPQ"
+    },
+    {
       "id": "-686627650",
       "method": "req_DH_params",
       "params": [
