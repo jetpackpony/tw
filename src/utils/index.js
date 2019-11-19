@@ -119,7 +119,7 @@ const bytesToHex = (bytes = []) => {
   return arr.join('')
 };
 
-const hexToBytes = (hexString) => {
+const hexToBytes = (hexString, littleEndian = false) => {
   const len = hexString.length;
   let start = 0;
   const bytes = [];
@@ -133,14 +133,18 @@ const hexToBytes = (hexString) => {
     bytes.push(parseInt(hexString.substr(i, 2), 16));
   }
 
-  return bytes
+  return (littleEndian) ? bytes.reverse() : bytes;
 };
 
 // Returns the number of padding bytes you need to add
 // for length to be divisible by mod
-const numberToPadToLengthDevidedBy = (mod, length) => {
+const numberToPadToLengthDevidedBy = (mod, length, minBytes = 0) => {
   let lenDiff = mod - length % mod;
-  return (lenDiff <= 0 || lenDiff >= mod) ? 0 : lenDiff;
+  lenDiff = (lenDiff <= 0 || lenDiff >= mod) ? 0 : lenDiff;
+  if (lenDiff < minBytes) {
+    lenDiff += mod;
+  }
+  return lenDiff;
 };
 
 
