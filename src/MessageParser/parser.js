@@ -4,6 +4,7 @@ import {
   bytesToHex,
   numberToPadToLengthDevidedBy
 } from '../utils';
+import { findByKey, isSimpleType } from './utils';
 import {
   decryptAES,
   getEncryptionParams
@@ -106,7 +107,6 @@ const parseConstructor = ({ bytes, offset, typeName, type }) => {
   return [Object.assign({}, type, { params }), offset];
 };
 
-const findByKey = (key, value) => (c) => c[key] === value;
 const getShcemaType = (nameOrId) => {
   if (typeof nameOrId === "string") {
     nameOrId = nameOrId[0].toUpperCase() + nameOrId.slice(1);
@@ -125,11 +125,6 @@ const getShcemaType = (nameOrId) => {
 
     throw(`Couldn't parse a type with id ${nameOrId}`);
   }
-};
-
-const simpleTypes = ["int", "long", "double", "string", "bytes", "int128", "int256"];
-const isSimpleType = (name) => {
-  return simpleTypes.includes(name);
 };
 
 const parseSimpleType = (name, bytes, offset) => {
