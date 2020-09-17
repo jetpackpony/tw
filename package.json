@@ -16,7 +16,7 @@
     "@babel/runtime": "^7.7.2",
     "aes-js": "^3.1.2",
     "big-integer": "^1.6.48",
-    "node-forge": "^0.9.1"
+    "node-forge": "^0.10.0"
   },
   "devDependencies": {
     "@babel/core": "^7.7.2",
