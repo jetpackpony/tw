@@ -23,6 +23,6 @@
     "@babel/plugin-proposal-class-properties": "^7.7.0",
     "@babel/plugin-transform-runtime": "^7.6.2",
     "chai": "^4.2.0",
-    "mocha": "^6.2.2"
+    "mocha": "^10.2.0"
   }
 }
